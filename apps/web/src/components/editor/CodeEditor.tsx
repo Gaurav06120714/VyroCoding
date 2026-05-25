@@ -32,6 +32,8 @@ interface CodeEditorProps {
   onRun?: () => void;
   onSubmit?: () => void;
   problemSlug?: string;
+  /** Called with (line, column) on cursor position change — used for live cursors */
+  onCursorChange?: (line: number, column: number) => void;
 }
 
 export function CodeEditor({
@@ -43,6 +45,7 @@ export function CodeEditor({
   onRun,
   onSubmit,
   problemSlug,
+  onCursorChange,
 }: CodeEditorProps) {
   const { fontSize, theme, minimap, wordWrap, tabSize } = useEditorStore();
   const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
@@ -85,20 +88,23 @@ export function CodeEditor({
       // Ctrl+Enter / Cmd+Enter → Run
       editor.addCommand(
         monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter,
-        () => {
-          onRun?.();
-        }
+        () => { onRun?.(); }
       );
 
       // Ctrl+Shift+Enter / Cmd+Shift+Enter → Submit
       editor.addCommand(
         monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.Enter,
-        () => {
-          onSubmit?.();
-        }
+        () => { onSubmit?.(); }
       );
+
+      // Cursor position → broadcast for live cursors
+      if (onCursorChange) {
+        editor.onDidChangeCursorPosition((e) => {
+          onCursorChange(e.position.lineNumber, e.position.column);
+        });
+      }
     },
-    [onRun, onSubmit]
+    [onRun, onSubmit, onCursorChange]
   );
 
   const editorOptions: Monaco.editor.IStandaloneEditorConstructionOptions = {

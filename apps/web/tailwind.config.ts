@@ -51,6 +51,8 @@ const config: Config = {
         'fade-in': 'fadeIn 0.5s ease-in-out',
         'slide-up': 'slideUp 0.4s ease-out',
         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'reaction-pop': 'reactionPop 0.3s cubic-bezier(0.175,0.885,0.32,1.275)',
+        'fade-in-up': 'fadeInUp 0.25s ease-out',
       },
       keyframes: {
         fadeIn: {
@@ -60,6 +62,14 @@ const config: Config = {
         slideUp: {
           '0%':   { transform: 'translateY(10px)', opacity: '0' },
           '100%': { transform: 'translateY(0)',    opacity: '1' },
+        },
+        reactionPop: {
+          '0%':   { transform: 'scale(0) translateY(10px)', opacity: '0' },
+          '100%': { transform: 'scale(1) translateY(0)',    opacity: '1' },
+        },
+        fadeInUp: {
+          '0%':   { transform: 'translateY(6px)', opacity: '0' },
+          '100%': { transform: 'translateY(0)',   opacity: '1' },
         },
       },
     },

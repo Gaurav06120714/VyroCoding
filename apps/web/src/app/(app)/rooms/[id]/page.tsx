@@ -2,13 +2,14 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams } from 'next/navigation';
-import { Play, Send, ChevronDown, Loader2, Eye } from 'lucide-react';
+import { Play, Send, ChevronDown, Loader2 } from 'lucide-react';
 import { Language, LANGUAGE_NAMES, type Problem, type ExecutionResult, type ChatMessage } from '@vyro/types';
 import { roomsApi, executeApi, roomsApi2, executeApiExt, type TestCaseResult } from '@/lib/api';
 import { useAuthStore } from '@/store/auth.store';
 import { useRoomStore } from '@/store/room.store';
 import { useToastStore } from '@/store/toast.store';
 import { useVoiceChat } from '@/hooks/useVoiceChat';
+import { useRoomWebSocket } from '@/hooks/useRoomWebSocket';
 import { ProblemStatement } from '@/components/problems/ProblemStatement';
 import { CodeEditor } from '@/components/editor/CodeEditor';
 import { OutputPanel } from '@/components/editor/OutputPanel';
@@ -16,6 +17,10 @@ import { RoomChat } from '@/components/room/RoomChat';
 import { RoomUsers } from '@/components/room/RoomUsers';
 import { RoomHeader } from '@/components/room/RoomHeader';
 import { RoomScoreboard } from '@/components/room/RoomScoreboard';
+import { PresenceBar } from '@/components/room/PresenceBar';
+import { LiveCursors } from '@/components/room/LiveCursors';
+import { ExecutionFeed } from '@/components/room/ExecutionFeed';
+import { ReactionOverlay } from '@/components/room/ReactionOverlay';
 
 const LANGUAGES = Object.entries(LANGUAGE_NAMES).map(([id, name]) => ({
   id: parseInt(id) as Language,
@@ -28,22 +33,20 @@ const DIFFICULTY_COLOR: Record<string, string> = {
   hard:   'bg-[#cf2d56]',
 };
 
-interface RoomProblem {
-  id: string;
-  slug: string;
-  title: string;
-  difficulty: string;
-  sort_order?: number;
+// Deterministic color from userId
+const CURSOR_COLORS = ['#828fff','#4ade80','#f59e0b','#f472b6','#22d3ee','#a78bfa','#fb923c','#34d399'];
+function userColor(uid: string) {
+  let h = 0;
+  for (let i = 0; i < uid.length; i++) h = uid.charCodeAt(i) + ((h << 5) - h);
+  return CURSOR_COLORS[Math.abs(h) % CURSOR_COLORS.length];
 }
 
+interface RoomProblem {
+  id: string; slug: string; title: string; difficulty: string; sort_order?: number;
+}
 interface ScoreboardEntry {
-  id: string;
-  status: string;
-  time_ms: number | null;
-  language_id: number;
-  created_at: string;
-  username: string;
-  user_id: string;
+  id: string; status: string; time_ms: number | null; language_id: number;
+  created_at: string; username: string; user_id: string;
 }
 
 export default function RoomPage() {
@@ -64,18 +67,71 @@ export default function RoomPage() {
   const [showLangMenu, setShowLangMenu]         = useState(false);
   const [rightTab, setRightTab]                 = useState<'chat' | 'users' | 'scoreboard'>('chat');
   const [bottomTab, setBottomTab]               = useState<'problems' | 'problem' | 'output'>('problem');
-  const [watcherCount, setWatcherCount]         = useState(0);
   const [timerEndTime, setTimerEndTime]         = useState<string | null>(null);
   const [lastSubmission, setLastSubmission]     = useState<ScoreboardEntry | null>(null);
+  const [editorHeight, setEditorHeight]         = useState(400);
+  const editorContainerRef = useRef<HTMLDivElement>(null);
 
-  const wsRef       = useRef<WebSocket | null>(null);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const myColor = user ? userColor(user.id) : '#828fff';
 
+  // ── Phase 2: WebSocket hook ───────────────────────────────────────────────
+  const {
+    wsStatus,
+    wsRef,
+    remoteCursors,
+    presenceUsers,
+    executionFeed,
+    reactions,
+    sendCode,
+    sendCursor,
+    sendTyping,
+    sendChat,
+    sendReaction,
+    sendLanguageChange,
+  } = useRoomWebSocket({
+    roomId: id,
+    userId: user?.id ?? '',
+    username: user?.username ?? 'Guest',
+    color: myColor,
+    language,
+    onCodeUpdate: (newCode) => setCode(newCode),
+    onProblemChanged: (slug, problemId, title) => {
+      loadProblem(slug);
+      setActiveProblemId(problemId);
+      addToast({ message: `Problem changed${title ? ` to ${title}` : ''}`, type: 'info', icon: '📋' });
+    },
+    onChatMessage: (msg) => addMessage(msg),
+    onTimerStart: (endTime) => {
+      setTimerEndTime(endTime);
+      addToast({ message: 'Timer started!', type: 'info', icon: '⏱' });
+    },
+    onSubmissionResult: ({ userId: uid, username: uname, status, problemTitle, timeMs, languageId }) => {
+      if (status === 'accepted') {
+        addToast({
+          message: `${uname} solved ${problemTitle ?? 'the problem'}!`,
+          type: 'success',
+          icon: '🎉',
+        });
+        setLastSubmission({
+          id: `${Date.now()}-${Math.random()}`,
+          status: 'accepted',
+          time_ms: timeMs ?? null,
+          language_id: languageId ?? 0,
+          created_at: new Date().toISOString(),
+          username: uname,
+          user_id: uid,
+        });
+      }
+    },
+  });
+
+  // ── Voice chat (uses upgraded wsRef from hook) ────────────────────────────
   const {
     inVoice, micMuted, participants: voiceParticipants, micError,
     joinVoice, leaveVoice, toggleMute,
   } = useVoiceChat(id, user?.id ?? '', user?.username ?? '', wsRef.current);
 
+  // ── Load problem ──────────────────────────────────────────────────────────
   const loadProblem = useCallback(async (slugOrId: string) => {
     try {
       const { problemsApi } = await import('@/lib/api');
@@ -88,133 +144,65 @@ export default function RoomPage() {
     }
   }, [language]);
 
+  // ── Initial room load ─────────────────────────────────────────────────────
   useEffect(() => {
     roomsApi.get(id).then(async (res) => {
       setRoom(res.data);
       setParticipants(res.data.participants ?? []);
-
       try {
         const pListRes = await roomsApi.problems(id);
         setRoomProblems(pListRes.data);
       } catch (e) {
         console.error('Failed to load room problems', e);
       }
-
       if (res.data.problemId) {
         await loadProblem(res.data.problem?.slug ?? res.data.problemId);
       }
       setLoading(false);
     }).catch(() => setLoading(false));
-
-    return () => { wsRef.current?.close(); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  // Wire up WebSocket
-  useEffect(() => {
-    if (!id) return;
-    const BASE_WS = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001').replace(/^http/, 'ws');
-    const token = typeof window !== 'undefined' ? localStorage.getItem('vyro_token') ?? '' : '';
-    const ws = new WebSocket(`${BASE_WS}/rooms/${id}/ws?token=${encodeURIComponent(token)}`);
-    wsRef.current = ws;
-
-    ws.onopen = () => {
-      // Announce presence for watcher count
-      if (user) {
-        ws.send(JSON.stringify({ type: 'presence', userId: user.id, username: user.username }));
-      }
-    };
-
-    ws.onmessage = (event) => {
-      try {
-        const msg = JSON.parse(event.data as string) as { type: string; [k: string]: unknown };
-
-        if (msg.type === 'chat') {
-          addMessage({
-            id: `${Date.now()}-${Math.random()}`,
-            roomId: id,
-            userId: msg.userId as string,
-            username: msg.username as string,
-            content: msg.content as string,
-            createdAt: msg.createdAt as string,
-          });
-        } else if (msg.type === 'problem-changed') {
-          const slug = msg.slug as string;
-          const title = msg.title as string | undefined;
-          loadProblem(slug);
-          setActiveProblemId(msg.problemId as string);
-          addToast({ message: `Problem changed${title ? ` to ${title}` : ''}`, type: 'info', icon: '📋' });
-        } else if (msg.type === 'code-update') {
-          // Only apply if from someone else
-          if (msg.userId !== user?.id) {
-            setCode(msg.code as string);
-          }
-        } else if (msg.type === 'submission-result') {
-          const status = msg.status as string;
-          const username = msg.username as string;
-          const problemTitle = msg.problemTitle as string | undefined;
-          if (status === 'accepted') {
-            addToast({
-              message: `${username} solved ${problemTitle ?? 'the problem'}!`,
-              type: 'success',
-              icon: '🎉',
-            });
-            // Feed to scoreboard
-            setLastSubmission({
-              id: `${Date.now()}-${Math.random()}`,
-              status: 'accepted',
-              time_ms: msg.timeMs as number | null,
-              language_id: msg.languageId as number,
-              created_at: new Date().toISOString(),
-              username,
-              user_id: msg.userId as string,
-            });
-          }
-        } else if (msg.type === 'timer-start') {
-          setTimerEndTime(msg.endTime as string);
-          addToast({ message: 'Timer started', type: 'info', icon: '⏱' });
-        } else if (msg.type === 'presence') {
-          setWatcherCount((c) => c + 1);
-        }
-      } catch {
-        // ignore
-      }
-    };
-
-    ws.onclose = () => { setWatcherCount(0); };
-
-    return () => { ws.close(); };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
-
-  // Debounced code sync
-  useEffect(() => {
-    if (!user || !wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      wsRef.current?.send(JSON.stringify({ type: 'code-update', code, userId: user.id }));
-    }, 300);
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [code]);
-
+  // ── Sync language change ──────────────────────────────────────────────────
   useEffect(() => {
     if (problem) setCode(problem.starterCode[language] ?? '');
   }, [language, problem]);
+
+  // ── Measure editor container for cursor overlay ───────────────────────────
+  useEffect(() => {
+    if (!editorContainerRef.current) return;
+    const observer = new ResizeObserver(([entry]) => {
+      setEditorHeight(entry.contentRect.height);
+    });
+    observer.observe(editorContainerRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  // ── Code change: sync + send cursor + typing indicator ───────────────────
+  const handleCodeChange = useCallback((newCode: string) => {
+    setCode(newCode);
+    sendCode(newCode);
+    sendTyping(true);
+    // Clear typing indicator after 1s of inactivity
+    clearTimeout((handleCodeChange as { _t?: ReturnType<typeof setTimeout> })._t);
+    (handleCodeChange as { _t?: ReturnType<typeof setTimeout> })._t = setTimeout(
+      () => sendTyping(false), 1000
+    );
+  }, [sendCode, sendTyping]);
+
+  const handleLanguageChange = useCallback((lang: Language) => {
+    setLanguage(lang);
+    setShowLangMenu(false);
+    sendLanguageChange(lang);
+  }, [sendLanguageChange]);
 
   const handleSelectProblem = useCallback(async (p: RoomProblem) => {
     await loadProblem(p.slug);
     setActiveProblemId(p.id);
     setBottomTab('problem');
-
     if (room && user && room.hostId === user.id) {
-      try {
-        await roomsApi2.setActiveProblem(id, p.id);
-      } catch (e) {
-        console.error('Failed to set active problem', e);
-      }
+      try { await roomsApi2.setActiveProblem(id, p.id); }
+      catch (e) { console.error('Failed to set active problem', e); }
     }
   }, [id, room, user, loadProblem]);
 
@@ -228,13 +216,10 @@ export default function RoomPage() {
       content,
       createdAt: new Date().toISOString(),
     };
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({ type: 'chat', ...msg }));
-    }
+    sendChat(content);
     addMessage(msg);
-  }, [id, user, addMessage]);
+  }, [id, user, sendChat, addMessage]);
 
-  // Run against all visible test cases
   const handleRun = useCallback(async () => {
     if (!problem) return;
     setIsRunning(true);
@@ -242,24 +227,13 @@ export default function RoomPage() {
     setResult(null);
     setBottomTab('output');
     try {
-      const res = await executeApiExt.runAll({
-        code,
-        languageId: language,
-        problemId: problem.id,
-      });
+      const res = await executeApiExt.runAll({ code, languageId: language, problemId: problem.id });
       setTestResults(res.data);
     } catch {
-      // Fallback to single run on first test case
       try {
-        const res = await executeApi.run({
-          code,
-          languageId: language,
-          stdin: problem.testCases[0]?.input ?? '',
-        });
+        const res = await executeApi.run({ code, languageId: language, stdin: problem.testCases[0]?.input ?? '' });
         setResult(res.data);
-      } catch (err) {
-        console.error(err);
-      }
+      } catch (err) { console.error(err); }
     } finally {
       setIsRunning(false);
     }
@@ -270,15 +244,10 @@ export default function RoomPage() {
     setIsRunning(true);
     setBottomTab('output');
     try {
-      const { data } = await executeApi.submit({
-        code,
-        languageId: language,
-        problemId: problem.id,
-        roomId: id,
-      });
+      const { data } = await executeApi.submit({ code, languageId: language, problemId: problem.id, roomId: id });
       const poll = async (subId: string, attempts = 0): Promise<void> => {
-        if (attempts > 20) return;
-        await new Promise((r) => setTimeout(r, 500));
+        if (attempts > 30) return;
+        await new Promise((r) => setTimeout(r, 600));
         const subRes = await executeApi.getSubmission(subId);
         if (subRes.data.status === 'processing' || subRes.data.status === 'pending') {
           return poll(subId, attempts + 1);
@@ -294,40 +263,25 @@ export default function RoomPage() {
         };
         setResult(executionResult);
 
-        // Broadcast submission result to room
-        if (subRes.data.status === 'accepted' && wsRef.current?.readyState === WebSocket.OPEN && user) {
-          wsRef.current.send(JSON.stringify({
-            type: 'submission-result',
-            userId: user.id,
-            username: user.username,
-            status: 'accepted',
-            problemId: problem.id,
-            problemTitle: problem.title,
-            timeMs: subRes.data.timeMs ?? null,
-            languageId: language,
-          }));
+        if (subRes.data.status === 'accepted' && user) {
+          // Backend broadcast handles room notification via BullMQ queue
           addToast({ message: `You solved ${problem.title}!`, type: 'success', icon: '🎉' });
         }
       };
       await poll(data.submissionId);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsRunning(false);
-    }
+    } catch (err) { console.error(err); }
+    finally { setIsRunning(false); }
   }, [code, language, problem, id, user, addToast]);
 
   const handleTimerEnd = useCallback(async () => {
     addToast({ message: "Time's Up!", type: 'error', icon: '⏰' });
     if (room && user && room.hostId === user.id) {
-      try {
-        await roomsApi2.setStatus(id, 'ended');
-      } catch (e) {
-        console.error('Failed to end room', e);
-      }
+      try { await roomsApi2.setStatus(id, 'ended'); }
+      catch (e) { console.error(e); }
     }
   }, [id, room, user, addToast]);
 
+  // ── Loading / not found ───────────────────────────────────────────────────
   if (loading) {
     return (
       <div className="h-screen flex items-center justify-center bg-canvas">
@@ -338,7 +292,6 @@ export default function RoomPage() {
       </div>
     );
   }
-
   if (!room) {
     return (
       <div className="h-screen flex items-center justify-center bg-canvas">
@@ -369,7 +322,7 @@ export default function RoomPage() {
       {/* 3-panel layout */}
       <div className="flex-1 flex overflow-hidden">
 
-        {/* LEFT — problem list + problem + output (30%) */}
+        {/* LEFT — problem list + problem description (30%) */}
         <div className="w-[30%] min-w-[260px] bg-surface1 border-r border-hairline flex flex-col overflow-hidden">
           <div className="flex border-b border-hairline shrink-0">
             {(['problems', 'problem', 'output'] as const).map((tab) => (
@@ -416,9 +369,7 @@ export default function RoomPage() {
                             }`}>
                               {p.difficulty.charAt(0).toUpperCase() + p.difficulty.slice(1, 3)}
                             </span>
-                            {isActive && (
-                              <span className="w-1.5 h-1.5 rounded-full bg-primary-hover shrink-0" />
-                            )}
+                            {isActive && <span className="w-1.5 h-1.5 rounded-full bg-primary-hover shrink-0" />}
                           </button>
                         </li>
                       );
@@ -440,7 +391,7 @@ export default function RoomPage() {
                 </div>
               )
             ) : (
-              <div className="h-full p-4">
+              <div className="h-full">
                 <OutputPanel result={result} testResults={testResults} isRunning={isRunning} />
               </div>
             )}
@@ -450,24 +401,24 @@ export default function RoomPage() {
         {/* CENTER — editor (50%) */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Editor toolbar */}
-          <div className="h-10 bg-surface2 border-b border-hairline flex items-center justify-between px-3 shrink-0">
-            {/* Left: language + Live badge */}
-            <div className="flex items-center gap-2">
+          <div className="h-10 bg-[#161b22] border-b border-white/[0.08] flex items-center justify-between px-3 shrink-0">
+            {/* Left: language selector + presence */}
+            <div className="flex items-center gap-2 flex-1 min-w-0">
               <div className="relative">
                 <button
                   onClick={() => setShowLangMenu(!showLangMenu)}
-                  className="flex items-center gap-1.5 bg-surface1 border border-hairline text-ink text-xs rounded-md px-2.5 py-1.5 hover:border-hairline-strong transition-colors"
+                  className="flex items-center gap-1.5 bg-[#0d1117] border border-white/[0.08] text-white/80 text-xs rounded-md px-2.5 py-1.5 hover:border-white/20 transition-colors"
                 >
                   {LANGUAGE_NAMES[language]}
-                  <ChevronDown className="w-3 h-3 text-ink-tertiary" />
+                  <ChevronDown className="w-3 h-3 text-white/30" />
                 </button>
                 {showLangMenu && (
-                  <div className="absolute left-0 top-full mt-1 w-44 bg-surface1 border border-hairline rounded-lg py-1 z-50">
+                  <div className="absolute left-0 top-full mt-1 w-44 bg-[#161b22] border border-white/[0.08] rounded-lg py-1 z-50 shadow-xl">
                     {LANGUAGES.map(({ id: lid, name }) => (
                       <button
                         key={lid}
-                        onClick={() => { setLanguage(lid); setShowLangMenu(false); }}
-                        className={`w-full text-left px-3 py-2 text-xs transition-colors hover:bg-surface2 ${language === lid ? 'text-primary-hover' : 'text-ink-muted'}`}
+                        onClick={() => handleLanguageChange(lid)}
+                        className={`w-full text-left px-3 py-2 text-xs transition-colors hover:bg-white/5 ${language === lid ? 'text-[#828fff]' : 'text-white/60'}`}
                       >
                         {name}
                       </button>
@@ -476,29 +427,31 @@ export default function RoomPage() {
                 )}
               </div>
 
-              {/* Watcher / live indicator */}
-              {watcherCount > 0 && (
-                <div className="flex items-center gap-1 text-[10px] text-ink-tertiary">
-                  <Eye className="w-3 h-3" />
-                  <span>{watcherCount} watching</span>
-                  <span className="w-1.5 h-1.5 rounded-full bg-easy animate-pulse ml-0.5" />
-                </div>
-              )}
+              {/* Presence bar */}
+              <PresenceBar
+                users={presenceUsers}
+                currentUserId={user?.id ?? ''}
+                currentUsername={user?.username ?? ''}
+                currentColor={myColor}
+                wsStatus={wsStatus}
+              />
             </div>
 
-            <div className="flex items-center gap-2">
+            {/* Right: reaction + run/submit */}
+            <div className="flex items-center gap-2 shrink-0">
+              <ReactionOverlay reactions={reactions} onSendReaction={sendReaction} />
               <button
                 onClick={handleRun}
                 disabled={isRunning || !problem}
-                className="flex items-center gap-1.5 text-xs bg-surface1 border border-hairline text-ink-muted px-3 py-1 rounded-md hover:text-ink hover:border-hairline-strong transition-colors disabled:opacity-40"
+                className="flex items-center gap-1.5 text-xs bg-[#0d1117] border border-white/[0.08] text-white/60 px-3 py-1 rounded-md hover:text-white hover:border-white/20 transition-colors disabled:opacity-40"
               >
-                {isRunning ? <Loader2 className="w-3 h-3 animate-spin" /> : <Play className="w-3 h-3 text-easy" />}
+                {isRunning ? <Loader2 className="w-3 h-3 animate-spin" /> : <Play className="w-3 h-3 text-[#27a644]" />}
                 Run
               </button>
               <button
                 onClick={handleSubmit}
                 disabled={isRunning || !problem}
-                className="flex items-center gap-1.5 text-xs bg-primary text-white px-3 py-1 rounded-md hover:bg-primary-hover transition-colors disabled:opacity-40"
+                className="flex items-center gap-1.5 text-xs bg-[#828fff] text-white px-3 py-1 rounded-md hover:bg-[#9da6ff] transition-colors disabled:opacity-40"
               >
                 <Send className="w-3 h-3" />
                 Submit
@@ -506,14 +459,17 @@ export default function RoomPage() {
             </div>
           </div>
 
-          {/* Monaco editor */}
-          <div className="flex-1 overflow-hidden">
+          {/* Monaco editor + live cursors overlay */}
+          <div ref={editorContainerRef} className="flex-1 overflow-hidden relative">
             <CodeEditor
               value={code}
-              onChange={setCode}
+              onChange={handleCodeChange}
               language={language}
               height="100%"
+              onCursorChange={sendCursor}
             />
+            <LiveCursors cursors={remoteCursors} editorHeight={editorHeight} />
+            <ExecutionFeed items={executionFeed} currentUserId={user?.id ?? ''} />
           </div>
         </div>
 
