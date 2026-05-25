@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { Play, Send, ChevronDown, Loader2, CheckCircle2, XCircle } from 'lucide-react';
 import { Language, LANGUAGE_NAMES, type Problem, type ExecutionResult } from '@vyro/types';
-import { problemsApi, executeApi, submissionsApi, type ProblemSubmission } from '@/lib/api';
+import { problemsApi, executeApi, executeApiExt, submissionsApi, type ProblemSubmission } from '@/lib/api';
 import { Badge } from '@/components/ui/Badge';
 import { ProblemStatement } from '@/components/problems/ProblemStatement';
 import { CodeEditor } from '@/components/editor/CodeEditor';
@@ -32,6 +32,7 @@ export default function ProblemPage() {
   const [language, setLanguage]                       = useState<Language>(Language.JavaScript);
   const [isRunning, setIsRunning]                     = useState(false);
   const [result, setResult]                           = useState<ExecutionResult | null>(null);
+  const [testResults, setTestResults]                 = useState<import('@/lib/api').TestCaseResult[] | null>(null);
   const [showLangMenu, setShowLangMenu]               = useState(false);
   const [activeTab, setActiveTab]                     = useState<'statement' | 'output' | 'submissions'>('statement');
   const [submissions, setSubmissions]                 = useState<ProblemSubmission[]>([]);
@@ -78,13 +79,11 @@ export default function ProblemPage() {
     if (!problem) return;
     setIsRunning(true);
     setActiveTab('output');
+    setResult(null);
+    setTestResults(null);
     try {
-      const res = await executeApi.run({
-        code,
-        languageId: language,
-        stdin: problem.testCases[0]?.input ?? '',
-      });
-      setResult(res.data);
+      const res = await executeApiExt.runAll({ code, languageId: language, problemId: problem.id });
+      setTestResults(res.data);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Unknown error';
       const isUnauth = msg.toLowerCase().includes('unauthorized') || msg.includes('401');
@@ -104,6 +103,7 @@ export default function ProblemPage() {
     if (!problem) return;
     setIsRunning(true);
     setActiveTab('output');
+    setTestResults(null);
     try {
       const { data } = await executeApi.submit({
         code,
@@ -302,7 +302,7 @@ export default function ProblemPage() {
               </div>
             ) : (
               <div className="h-full p-4">
-                <OutputPanel result={result} isRunning={isRunning} />
+                <OutputPanel result={result} testResults={testResults} isRunning={isRunning} />
               </div>
             )}
           </div>
