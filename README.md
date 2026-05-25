@@ -67,10 +67,19 @@ VyroCoding/
 - pnpm 9+
 - PostgreSQL 16+
 - Redis 7+
+- [Vyro Browser](https://github.com/Gaurav06120714/VyroBrowser) *(optional — auto-opens the app)*
 
 ### 1. Clone & Install
 
+**macOS**
 ```bash
+git clone https://github.com/Gaurav06120714/VyroCoding.git
+cd VyroCoding
+pnpm install
+```
+
+**Windows**
+```powershell
 git clone https://github.com/Gaurav06120714/VyroCoding.git
 cd VyroCoding
 pnpm install
@@ -113,18 +122,36 @@ DATABASE_URL=postgresql://vyro:vyro@localhost:5432/vyro_coding npx tsx src/db/se
 
 ### 4. Start All Services
 
+**macOS**
 ```bash
+# All services + auto-open in Vyro Browser
+npm run dev:vyro
+
+# Or manually:
 # Terminal 1 — API
-cd apps/api
-DATABASE_URL=postgresql://vyro:vyro@localhost:5432/vyro_coding npm run dev
+cd apps/api && DATABASE_URL=postgresql://vyro:vyro@localhost:5432/vyro_coding npm run dev
 
 # Terminal 2 — Collab server
-cd apps/collab
-npm run dev
+cd apps/collab && npm run dev
 
 # Terminal 3 — Web
-cd apps/web
-PORT=3002 npm run dev
+cd apps/web && PORT=3002 npm run dev
+```
+
+**Windows**
+```powershell
+# All services + auto-open in Vyro Browser
+npm run dev:vyro
+
+# Or manually in 3 separate PowerShell windows:
+# Window 1 — API
+cd apps\api; $env:DATABASE_URL="postgresql://vyro:vyro@localhost:5432/vyro_coding"; npm run dev
+
+# Window 2 — Collab
+cd apps\collab; npm run dev
+
+# Window 3 — Web
+cd apps\web; $env:PORT=3002; npm run dev
 ```
 
 ### 5. Open
@@ -134,6 +161,8 @@ PORT=3002 npm run dev
 | 🌐 Web App | http://localhost:3002 |
 | ⚙️ API | http://localhost:3001 |
 | 🔄 Collab (Yjs WS) | ws://localhost:1234 |
+
+> 💡 `npm run dev:vyro` starts all services and automatically opens http://localhost:3000 in Vyro Browser if installed.
 
 ---
 
