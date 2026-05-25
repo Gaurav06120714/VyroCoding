@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const JUDGE0_API_URL = process.env.JUDGE0_API_URL ?? 'https://judge0-ce.p.rapidapi.com';
+const JUDGE0_API_URL = process.env.JUDGE0_API_URL ?? 'https://ce.judge0.com';
 const JUDGE0_API_KEY = process.env.JUDGE0_API_KEY ?? '';
 
 export const LANGUAGES: Record<Language, { id: Language; name: string; monacoId: string }> = {
@@ -39,7 +39,8 @@ function buildHeaders(): Record<string, string> {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   };
-  if (JUDGE0_API_KEY) {
+  // Only add RapidAPI headers if using the RapidAPI endpoint
+  if (JUDGE0_API_KEY && JUDGE0_API_URL.includes('rapidapi')) {
     Object.assign(headers, {
       'X-RapidAPI-Key': JUDGE0_API_KEY,
       'X-RapidAPI-Host': 'judge0-ce.p.rapidapi.com',
