@@ -2,9 +2,9 @@
   "name": "@vyro/web",
   "version": "1.0.0",
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 3002",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -p 3002",
     "lint": "next lint",
     "type-check": "tsc --noEmit"
   },

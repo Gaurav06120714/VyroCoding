@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "pnpm --parallel --filter './apps/*' run dev",
-    "dev:vyro": "pnpm --parallel --filter './apps/*' run dev & sleep 4 && node open-in-vyro.mjs http://localhost:3000",
+    "dev": "PORT=3003 COLLAB_PORT=3004 pnpm --parallel --filter './apps/*' run dev",
+    "dev:vyro": "PORT=3003 COLLAB_PORT=3004 pnpm --parallel --filter './apps/*' run dev & sleep 4 && node open-in-vyro.mjs http://localhost:3002",
     "build": "pnpm --filter './packages/*' run build && pnpm --filter './apps/*' run build",
     "lint": "pnpm --recursive run lint",
     "type-check": "pnpm --recursive run type-check"

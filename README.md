@@ -49,7 +49,7 @@ A **real-time multiplayer coding platform** where students and professionals can
 VyroCoding/
 ├── apps/
 │   ├── web/          → Next.js 15 frontend         (port 3002)
-│   ├── api/          → Fastify REST API             (port 3001)
+│   ├── api/          → Fastify REST API             (port 3003)
 │   └── collab/       → Yjs WebSocket server         (port 1234)
 ├── packages/
 │   └── types/        → Shared TypeScript types
@@ -99,7 +99,7 @@ REDIS_URL=redis://localhost:6379
 JWT_SECRET=your-secret-key
 JUDGE0_API_URL=https://judge0-ce.p.rapidapi.com
 JUDGE0_API_KEY=your-rapidapi-key
-NEXT_PUBLIC_API_URL=http://localhost:3001
+NEXT_PUBLIC_API_URL=http://localhost:3003
 NEXT_PUBLIC_COLLAB_URL=ws://localhost:1234
 ```
 
@@ -159,10 +159,10 @@ cd apps\web; $env:PORT=3002; npm run dev
 | Service | URL |
 |---|---|
 | 🌐 Web App | http://localhost:3002 |
-| ⚙️ API | http://localhost:3001 |
+| ⚙️ API | http://localhost:3003 |
 | 🔄 Collab (Yjs WS) | ws://localhost:1234 |
 
-> 💡 `npm run dev:vyro` starts all services and automatically opens http://localhost:3000 in Vyro Browser if installed.
+> 💡 `npm run dev:vyro` starts all services and automatically opens http://localhost:3002 in Vyro Browser if installed.
 
 ---
 
@@ -203,7 +203,7 @@ cd apps\web; $env:PORT=3002; npm run dev
     │                          │
     │                     REST API calls
     │                          │
-    ├── REST ───────────► [Fastify API :3001]
+    ├── REST ───────────► [Fastify API :3003]
     │                          ├── PostgreSQL (users, problems, submissions)
     │                          ├── Redis (leaderboard, cache)
     │                          └── Judge0 (code execution)
