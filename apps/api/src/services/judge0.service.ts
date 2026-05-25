@@ -53,6 +53,27 @@ function base64Encode(str: string): string {
   return Buffer.from(str).toString('base64');
 }
 
+/**
+ * Wraps user code with a stdin→function→stdout harness.
+ * The test case input is always a JSON array of arguments.
+ * We extract the function name from the first line and call it.
+ */
+function wrapCode(code: string, languageId: Language): string {
+  if (languageId === Language.JavaScript || languageId === Language.TypeScript) {
+    // Extract function name: "function myFunc(" → "myFunc"
+    const match = code.match(/function\s+(\w+)\s*\(/);
+    if (!match) return code; // can't wrap, return as-is
+    const fnName = match[1];
+    return (
+      code.trimEnd() +
+      `\n\nconst __a=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8').trim());` +
+      `\nconsole.log(JSON.stringify(${fnName}(...(Array.isArray(__a)?__a:[__a]))));`
+    );
+  }
+  // Python/others already have wrapper in starter code or handle stdin themselves
+  return code;
+}
+
 function base64Decode(str: string): string {
   return Buffer.from(str, 'base64').toString('utf-8');
 }
@@ -62,6 +83,7 @@ export async function submitCode(
   languageId: Language,
   stdin: string = ''
 ): Promise<string> {
+  const wrappedCode = wrapCode(code, languageId);
   const response = await fetch(
     `${JUDGE0_API_URL}/submissions?base64_encoded=true&wait=false`,
     {
@@ -69,7 +91,7 @@ export async function submitCode(
       headers: buildHeaders(),
       body: JSON.stringify({
         language_id: languageId,
-        source_code: base64Encode(code),
+        source_code: base64Encode(wrappedCode),
         stdin: base64Encode(stdin),
         cpu_time_limit: 2,
         memory_limit: 128000,
