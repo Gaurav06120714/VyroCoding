@@ -287,6 +287,20 @@ export const adminApi = {
     request<{ data: Array<{ id: string; status: string; language_id: number; created_at: string; username: string; problem_title: string }> }>('/admin/submissions'),
 };
 
+// ─── Languages ───────────────────────────────────────────────────────────────
+
+export interface LanguageEntry {
+  id: number;
+  name: string;
+  monacoId: string;
+  version: string;
+  starterTemplate: string;
+}
+
+export const languagesApi = {
+  list: () => request<{ data: LanguageEntry[] }>('/languages'),
+};
+
 // ─── Auth extras ─────────────────────────────────────────────────────────────
 
 export const authApiExt = {

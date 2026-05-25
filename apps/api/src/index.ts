@@ -2,6 +2,7 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import jwt from '@fastify/jwt';
 import websocket from '@fastify/websocket';
+import rateLimit from '@fastify/rate-limit';
 import dotenv from 'dotenv';
 
 import { authRoutes } from './routes/auth.routes.js';
@@ -12,6 +13,7 @@ import { contestsRoutes, createWeeklyContest } from './routes/contests.routes.js
 import { leaderboardRoutes } from './routes/leaderboard.routes.js';
 import { usersRoutes } from './routes/users.routes.js';
 import { adminRoutes } from './routes/admin.routes.js';
+import { languagesRoutes } from './routes/languages.routes.js';
 
 dotenv.config();
 
@@ -33,15 +35,40 @@ async function bootstrap(): Promise<void> {
 
   await fastify.register(websocket);
 
+  // Global rate limiting: 30 requests per minute per IP
+  await fastify.register(rateLimit, {
+    global: true,
+    max: 30,
+    timeWindow: '1 minute',
+    errorResponseBuilder: (_request, context) => ({
+      error: 'Too Many Requests',
+      message: `Rate limit exceeded. Retry after ${Math.ceil(context.ttl / 1000)} seconds.`,
+      statusCode: 429,
+    }),
+  });
+
   // Routes
   await fastify.register(authRoutes,      { prefix: '/auth' });
   await fastify.register(problemsRoutes,  { prefix: '/problems' });
   await fastify.register(roomsRoutes,     { prefix: '/rooms' });
-  await fastify.register(executeRoutes,   { prefix: '/execute' });
+  // Execute routes with stricter rate limit: 10 per minute
+  await fastify.register(async (executeInstance) => {
+    await executeInstance.register(rateLimit, {
+      max: 10,
+      timeWindow: '1 minute',
+      errorResponseBuilder: (_request, context) => ({
+        error: 'Too Many Requests',
+        message: `Execute rate limit exceeded. Retry after ${Math.ceil(context.ttl / 1000)} seconds.`,
+        statusCode: 429,
+      }),
+    });
+    await executeInstance.register(executeRoutes);
+  }, { prefix: '/execute' });
   await fastify.register(contestsRoutes,  { prefix: '/contests' });
   await fastify.register(leaderboardRoutes, { prefix: '/leaderboard' });
   await fastify.register(usersRoutes,     { prefix: '/users' });
   await fastify.register(adminRoutes,     { prefix: '/admin' });
+  await fastify.register(languagesRoutes, { prefix: '/languages' });
 
   // Health check
   fastify.get('/health', async () => ({ status: 'ok', ts: new Date().toISOString() }));

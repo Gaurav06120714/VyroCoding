@@ -126,10 +126,41 @@ export async function executeRoutes(fastify: FastifyInstance): Promise<void> {
         status: string;
         stdout: string | null;
         stderr: string | null;
+        compile_output: string | null;
         time_ms: number | null;
         memory_kb: number | null;
         created_at: string;
-      }>('SELECT * FROM submissions WHERE id = $1', [id]);
+      }>('SELECT id, user_id, status, stdout, stderr, compile_output, time_ms, memory_kb, created_at FROM submissions WHERE id = $1', [id]);
+
+      if (!submission) return reply.code(404).send({ error: 'Submission not found' });
+      if (submission.user_id !== userId) return reply.code(403).send({ error: 'Forbidden' });
+
+      return reply.send({ data: submission });
+    }
+  );
+
+  // GET /execute/status/:submissionId — returns current submission status
+  fastify.get<{ Params: { submissionId: string } }>(
+    '/status/:submissionId',
+    { preHandler: authenticate },
+    async (request, reply) => {
+      const { submissionId } = request.params;
+      const { userId } = request.user as { userId: string };
+
+      const submission = await queryOne<{
+        id: string;
+        user_id: string;
+        status: string;
+        stdout: string | null;
+        stderr: string | null;
+        compile_output: string | null;
+        time_ms: number | null;
+        memory_kb: number | null;
+        created_at: string;
+      }>(
+        'SELECT id, user_id, status, stdout, stderr, compile_output, time_ms, memory_kb, created_at FROM submissions WHERE id = $1',
+        [submissionId]
+      );
 
       if (!submission) return reply.code(404).send({ error: 'Submission not found' });
       if (submission.user_id !== userId) return reply.code(403).send({ error: 'Forbidden' });

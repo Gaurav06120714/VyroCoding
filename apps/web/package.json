@@ -17,6 +17,7 @@
     "next": "15.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-resizable-panels": "^4.11.2",
     "tailwind-merge": "^2.2.1",
     "y-websocket": "^2.0.3",
     "yjs": "^13.6.14",
