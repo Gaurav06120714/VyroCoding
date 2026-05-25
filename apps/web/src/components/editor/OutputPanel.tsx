@@ -40,7 +40,8 @@ function statusColor(status: SubmissionStatus): string {
   }
 }
 
-function statusLabel(status: SubmissionStatus): string {
+function statusLabel(status: SubmissionStatus | undefined): string {
+  if (!status) return 'Error';
   return status
     .replace(/_/g, ' ')
     .replace(/\b\w/g, (c) => c.toUpperCase());

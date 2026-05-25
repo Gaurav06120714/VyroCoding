@@ -15,12 +15,12 @@ export function Navbar({ title: _title }: { title?: string }) {
   const { user, logout } = useAuthStore();
   return (
     <header className="lg-bar h-14 flex items-center justify-between px-6 sticky top-0 z-30">
-      <div className="flex items-center gap-2.5 shrink-0">
+      <Link href="/" className="flex items-center gap-2.5 shrink-0">
         <div className="lg-btn-primary flex items-center justify-center w-7 h-7 !px-0 !rounded-[9px]">
           <Code2 className="w-4 h-4 text-white" />
         </div>
         <span className="font-semibold text-base text-white">Vyro Coding</span>
-      </div>
+      </Link>
       <nav className="hidden md:flex items-center gap-1">
         {navLinks.map(({ href, label }) => (
           <Link key={href} href={href} className="text-sm font-medium text-white/50 hover:text-white transition-colors px-3 py-1.5 rounded-[10px] hover:bg-white/[0.06]">

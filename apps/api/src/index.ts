@@ -8,7 +8,7 @@ import { authRoutes } from './routes/auth.routes.js';
 import { problemsRoutes } from './routes/problems.routes.js';
 import { roomsRoutes } from './routes/rooms.routes.js';
 import { executeRoutes } from './routes/execute.routes.js';
-import { contestsRoutes } from './routes/contests.routes.js';
+import { contestsRoutes, createWeeklyContest } from './routes/contests.routes.js';
 import { leaderboardRoutes } from './routes/leaderboard.routes.js';
 import { usersRoutes } from './routes/users.routes.js';
 import { adminRoutes } from './routes/admin.routes.js';
@@ -52,6 +52,14 @@ async function bootstrap(): Promise<void> {
 
   await fastify.listen({ port, host });
   console.log(`API running on http://${host}:${port}`);
+
+  // Auto-create next Monday's weekly contest on every startup
+  createWeeklyContest()
+    .then((c) => {
+      if (c) console.log(`[weekly] Created contest: ${c.title} (${c.id})`);
+      else    console.log('[weekly] Contest already exists or no unused problems — skipped.');
+    })
+    .catch((err) => console.error('[weekly] Failed to auto-create contest:', err));
 }
 
 bootstrap().catch((err) => {

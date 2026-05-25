@@ -86,7 +86,15 @@ export default function ProblemPage() {
       });
       setResult(res.data);
     } catch (err) {
-      console.error(err);
+      const msg = err instanceof Error ? err.message : 'Unknown error';
+      const isUnauth = msg.toLowerCase().includes('unauthorized') || msg.includes('401');
+      setResult({
+        token: '',
+        status: { id: -1, description: 'runtime_error' },
+        submissionStatus: 'runtime_error' as ExecutionResult['submissionStatus'],
+        stdout: undefined,
+        stderr: isUnauth ? '⚠️ Please sign in to run or submit code.' : msg,
+      } as ExecutionResult);
     } finally {
       setIsRunning(false);
     }
@@ -123,7 +131,15 @@ export default function ProblemPage() {
       };
       await poll(data.submissionId);
     } catch (err) {
-      console.error(err);
+      const msg = err instanceof Error ? err.message : 'Unknown error';
+      const isUnauth = msg.toLowerCase().includes('unauthorized') || msg.includes('401');
+      setResult({
+        token: '',
+        status: { id: -1, description: 'runtime_error' },
+        submissionStatus: 'runtime_error' as ExecutionResult['submissionStatus'],
+        stdout: undefined,
+        stderr: isUnauth ? '⚠️ Please sign in to run or submit code.' : msg,
+      } as ExecutionResult);
     } finally {
       setIsRunning(false);
     }

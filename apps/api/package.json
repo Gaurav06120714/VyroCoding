@@ -6,6 +6,7 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "seed": "tsx src/db/seed.ts",
+    "seed:100": "tsx src/db/seed-100.ts",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {

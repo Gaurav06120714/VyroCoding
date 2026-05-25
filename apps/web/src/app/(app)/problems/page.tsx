@@ -41,6 +41,7 @@ export default function ProblemsPage() {
         difficulty: difficulty === 'all' ? undefined : difficulty,
         search: search || undefined,
         page,
+        pageSize: 50,
       });
       setProblems(res.data.items);
       setTotal(res.data.total);
@@ -173,7 +174,7 @@ export default function ProblemsPage() {
           </table>
 
           {/* Pagination */}
-          {total > 20 && (
+          {total > 50 && (
             <div className="flex items-center justify-center gap-3 p-4 border-t border-white/[0.08]">
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
@@ -182,10 +183,10 @@ export default function ProblemsPage() {
               >
                 Previous
               </button>
-              <span className="text-sm text-white/40">Page {page} of {Math.ceil(total / 20)}</span>
+              <span className="text-sm text-white/40">Page {page} of {Math.ceil(total / 50)}</span>
               <button
                 onClick={() => setPage((p) => p + 1)}
-                disabled={page * 20 >= total}
+                disabled={page * 50 >= total}
                 className="lg-btn-secondary text-sm px-4 !h-8 disabled:opacity-40"
               >
                 Next

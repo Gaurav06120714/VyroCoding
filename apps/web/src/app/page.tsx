@@ -65,10 +65,6 @@ export default function LandingPage() {
       <section className="relative pt-36 pb-24 px-4 text-center overflow-hidden">
         <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% -20%, rgba(94,106,210,0.15), transparent)' }} />
         <div className="relative max-w-4xl mx-auto">
-          <span className="lg-pill text-white/60 text-[11px] font-semibold uppercase tracking-[0.88px] px-4 py-1.5 inline-flex items-center gap-2 mb-8">
-            <Zap className="w-3 h-3 text-[#828fff]" />
-            Now live — Real-time multiplayer coding platform
-          </span>
           <h1 className="font-extrabold leading-[1.0] tracking-[-0.05em] text-white mb-6" style={{ fontSize: 'var(--text-hero)' }}>
             Code Together.<br />
             <span className="gradient-text">Win Together.</span>

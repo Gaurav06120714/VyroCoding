@@ -73,6 +73,11 @@ export async function problemsRoutes(fastify: FastifyInstance): Promise<void> {
 
     const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
+    // Cache key based on all query params
+    const listCacheKey = `problems:list:${difficulty ?? 'all'}:${tag ?? ''}:${search ?? ''}:${page}:${pageSize}`;
+    const cached = await cacheGet<{ items: unknown[]; total: number; page: number; pageSize: number; hasMore: boolean }>(listCacheKey);
+    if (cached) return reply.send({ data: cached });
+
     const countRows = await query<{ count: string }>(
       `SELECT COUNT(*) as count FROM problems ${where}`,
       params
@@ -87,23 +92,25 @@ export async function problemsRoutes(fastify: FastifyInstance): Promise<void> {
       [...params, parseInt(pageSize, 10), offset]
     );
 
-    return reply.send({
-      data: {
-        items: rows.map((r) => ({
-          id: r.id,
-          slug: r.slug,
-          title: r.title,
-          difficulty: r.difficulty as Difficulty,
-          tags: r.tags ?? [],
-          acceptanceRate: parseFloat(r.acceptance_rate) || 0,
-          createdAt: r.created_at,
-        })),
-        total,
-        page: parseInt(page, 10),
-        pageSize: parseInt(pageSize, 10),
-        hasMore: offset + rows.length < total,
-      },
-    });
+    const responseData = {
+      items: rows.map((r) => ({
+        id: r.id,
+        slug: r.slug,
+        title: r.title,
+        difficulty: r.difficulty as Difficulty,
+        tags: r.tags ?? [],
+        acceptanceRate: parseFloat(r.acceptance_rate) || 0,
+        createdAt: r.created_at,
+      })),
+      total,
+      page: parseInt(page, 10),
+      pageSize: parseInt(pageSize, 10),
+      hasMore: offset + rows.length < total,
+    };
+    // Cache for 60 seconds
+    await cacheSet(listCacheKey, responseData, 60);
+
+    return reply.send({ data: responseData });
   });
 
   // GET /problems/:slug

@@ -136,6 +136,13 @@ export default function ContestsPage() {
   const [contests, setContests]   = useState<Contest[]>([]);
   const [loading, setLoading]     = useState(true);
   const [filter, setFilter]       = useState<StatusFilter>('all');
+  const [toast, setToast]         = useState<{ msg: string; ok: boolean } | null>(null);
+
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 3500);
+    return () => clearTimeout(t);
+  }, [toast]);
 
   useEffect(() => {
     contestsApi.list().then((res) => {
@@ -151,8 +158,10 @@ export default function ContestsPage() {
       setContests((prev) => prev.map((c) =>
         c.id === id ? { ...c, participantCount: (c.participantCount ?? 0) + 1 } : c
       ));
+      setToast({ msg: 'Successfully joined the contest!', ok: true });
     } catch (err) {
-      console.error('Failed to join contest', err);
+      const msg = err instanceof Error ? err.message : 'Failed to join contest';
+      setToast({ msg, ok: false });
     }
   }, []);
 
@@ -219,6 +228,16 @@ export default function ContestsPage() {
         )}
 
       </div>
+
+      {/* Toast */}
+      {toast && (
+        <div className={cn(
+          'fixed bottom-6 left-1/2 -translate-x-1/2 px-5 py-3 rounded-xl text-sm font-medium shadow-xl z-50',
+          toast.ok ? 'bg-[#27a644] text-white' : 'bg-[#e5534b] text-white'
+        )}>
+          {toast.msg}
+        </div>
+      )}
     </div>
   );
 }
