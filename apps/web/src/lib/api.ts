@@ -304,14 +304,77 @@ export const languagesApi = {
 // ─── Auth extras ─────────────────────────────────────────────────────────────
 
 export const authApiExt = {
+  /**
+   * Initiate a password reset.
+   *
+   * Production: always returns `{ message }` (email sent silently).
+   * Dev mode (no RESEND_API_KEY): also returns `resetToken` + `resetLink`
+   *   so developers can test the flow without email credentials.
+   */
   forgotPassword: (email: string) =>
-    request<{ data: { resetToken?: string; message: string } }>('/auth/forgot-password', {
+    request<{
+      data: {
+        message: string;
+        /** Dev-mode only — raw 64-hex token */
+        resetToken?: string;
+        /** Dev-mode only — full reset URL */
+        resetLink?: string;
+      };
+    }>('/auth/forgot-password', {
       method: 'POST',
       body: JSON.stringify({ email }),
     }),
+
+  /**
+   * Complete a password reset using the raw token from the email link.
+   * Throws on invalid / expired token.
+   */
   resetPassword: (token: string, newPassword: string) =>
     request<{ data: { message: string } }>('/auth/reset-password', {
       method: 'POST',
       body: JSON.stringify({ token, newPassword }),
     }),
+
+  /**
+   * Change password for the currently authenticated user.
+   * Requires a valid JWT in the Authorization header.
+   */
+  changePassword: (currentPassword: string, newPassword: string) =>
+    request<{ data: { message: string } }>('/auth/change-password', {
+      method: 'POST',
+      body: JSON.stringify({ currentPassword, newPassword }),
+    }),
+};
+
+// ─── Ollama / AI ──────────────────────────────────────────────────────────────
+
+export interface OllamaModel {
+  name: string;
+  size: number;
+  modifiedAt: string;
+}
+
+export interface OllamaSetupStatus {
+  installed: boolean;
+  running: boolean;
+  models: OllamaModel[];
+  activeModel: string | null;
+  recommendedModel: string;
+  error?: string;
+}
+
+export const aiApi = {
+  status: () =>
+    request<{ available: boolean; model: string; provider: string; error?: string }>('/ai/status'),
+
+  ollamaSetup: () =>
+    request<OllamaSetupStatus>('/ai/ollama/setup'),
+
+  ollamaStart: () =>
+    request<{ success: boolean; message?: string; error?: string }>('/ai/ollama/start', {
+      method: 'POST',
+    }),
+
+  /** SSE stream — full zero-click auto-setup (start daemon + pull model). Use fetch() directly. */
+  ollamaAutoSetupUrl: (apiBase: string) => `${apiBase}/ai/ollama/auto-setup`,
 };

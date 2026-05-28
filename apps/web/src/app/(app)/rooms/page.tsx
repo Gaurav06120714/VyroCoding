@@ -55,15 +55,15 @@ function CreateRoomModal({ onClose, onCreated }: {
 
         {error && (
           <div className="mb-5 px-4 py-3 rounded-[11px] text-sm" style={{
-            background: 'rgba(207,45,86,0.12)',
-            border: '1px solid rgba(207,45,86,0.25)',
-            color: '#cf2d56',
+            background: 'rgba(239,68,68,0.12)',
+            border: '1px solid rgba(239,68,68,0.25)',
+            color: '#ef4444',
           }}>{error}</div>
         )}
 
         <form onSubmit={handleCreate} className="space-y-4">
           <div>
-            <label className="block text-[11px] font-semibold text-white/40 uppercase tracking-[0.4px] mb-1.5">Room Name</label>
+            <label className="block text-[11px] font-semibold text-[#8a9bb5] uppercase tracking-[0.4px] mb-1.5">Room Name</label>
             <input
               type="text"
               value={name}
@@ -74,7 +74,7 @@ function CreateRoomModal({ onClose, onCreated }: {
             />
           </div>
           <div>
-            <label className="block text-[11px] font-semibold text-white/40 uppercase tracking-[0.4px] mb-1.5">Max Participants</label>
+            <label className="block text-[11px] font-semibold text-[#8a9bb5] uppercase tracking-[0.4px] mb-1.5">Max Participants</label>
             <select
               value={maxParticipants}
               onChange={(e) => setMaxParticipants(parseInt(e.target.value, 10))}
@@ -91,7 +91,7 @@ function CreateRoomModal({ onClose, onCreated }: {
               onClick={() => setIsPublic(!isPublic)}
               className={`flex items-center gap-2 px-3 py-2 rounded-[11px] border text-sm transition-colors ${
                 isPublic
-                  ? 'bg-[rgba(94,106,210,0.2)] border-[rgba(130,143,255,0.3)] text-[#828fff]'
+                  ? 'bg-[rgba(0,212,255,0.2)] border-[rgba(130,143,255,0.3)] text-[#00d4ff]'
                   : 'bg-white/5 border-white/[0.12] text-white/50'
               }`}
             >
@@ -145,7 +145,7 @@ function RoomProblemsModal({ roomId, roomName, onClose }: { roomId: string; room
             return (
               <div key={diff} className="mb-5">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.88px] mb-2" style={{
-                  color: diff === 'easy' ? '#27a644' : diff === 'medium' ? '#f5a623' : '#cf2d56'
+                  color: diff === 'easy' ? '#10b981' : diff === 'medium' ? '#f59e0b' : '#ef4444'
                 }}>
                   {diff} · {items.length}
                 </p>
@@ -246,7 +246,7 @@ export default function RoomsPage() {
           <div className="lg-card p-16 text-center">
             <Users className="w-10 h-10 text-white/30 mx-auto mb-4" />
             <h3 className="font-semibold text-white mb-1">No active rooms</h3>
-            <p className="text-sm text-white/45 mb-6">Be the first to create a coding room!</p>
+            <p className="text-sm text-[#8a9bb5] mb-6">Be the first to create a coding room!</p>
             <Button variant="primary" onClick={() => setShowCreate(true)}>Create Room</Button>
           </div>
         ) : (
@@ -269,7 +269,7 @@ export default function RoomsPage() {
                         <button
                           onClick={(e) => handleDelete(e, room.id)}
                           disabled={deletingId === room.id}
-                          className="p-1 rounded-[6px] text-white/25 hover:text-hard hover:bg-[rgba(207,45,86,0.12)] transition-colors disabled:opacity-40"
+                          className="p-1 rounded-[6px] text-white/25 hover:text-hard hover:bg-[rgba(239,68,68,0.12)] transition-colors disabled:opacity-40"
                           title="Delete room"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -286,7 +286,7 @@ export default function RoomsPage() {
                   {/* Problem set summary */}
                   <button
                     onClick={() => setPreviewRoom({ id: room.id, name: room.name })}
-                    className="flex items-center gap-1.5 text-xs text-[#828fff]/70 hover:text-[#828fff] transition-colors mb-4 w-fit"
+                    className="flex items-center gap-1.5 text-xs text-[#00d4ff]/70 hover:text-[#00d4ff] transition-colors mb-4 w-fit"
                   >
                     <BookOpen className="w-3.5 h-3.5" />
                     10 problems · 5E · 3M · 2H
@@ -299,8 +299,8 @@ export default function RoomsPage() {
                     </span>
                     <span className={`text-xs font-medium rounded-full px-3 py-0.5 ${
                       isFull
-                        ? 'bg-[rgba(207,45,86,0.15)] text-[#cf2d56]'
-                        : 'bg-[rgba(39,166,68,0.15)] text-easy'
+                        ? 'bg-[rgba(239,68,68,0.15)] text-[#ef4444]'
+                        : 'bg-[rgba(16,185,129,0.15)] text-easy'
                     }`}>
                       {isFull ? 'Full' : 'Open'}
                     </span>

@@ -17,22 +17,22 @@ export function ToastContainer() {
           style={{
             background:
               toast.type === 'success'
-                ? 'rgba(39,166,68,0.15)'
+                ? 'rgba(16,185,129,0.15)'
                 : toast.type === 'error'
-                ? 'rgba(207,45,86,0.15)'
-                : 'rgba(94,106,210,0.15)',
+                ? 'rgba(239,68,68,0.15)'
+                : 'rgba(0,212,255,0.15)',
             borderColor:
               toast.type === 'success'
-                ? 'rgba(39,166,68,0.3)'
+                ? 'rgba(16,185,129,0.3)'
                 : toast.type === 'error'
-                ? 'rgba(207,45,86,0.3)'
-                : 'rgba(94,106,210,0.3)',
+                ? 'rgba(239,68,68,0.3)'
+                : 'rgba(0,212,255,0.3)',
             color:
               toast.type === 'success'
-                ? '#27a644'
+                ? '#10b981'
                 : toast.type === 'error'
-                ? '#cf2d56'
-                : '#828fff',
+                ? '#ef4444'
+                : '#00d4ff',
           }}
         >
           {toast.icon && <span className="text-base leading-none shrink-0">{toast.icon}</span>}

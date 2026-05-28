@@ -91,7 +91,7 @@ export interface UseRoomWebSocketReturn {
 // ── Color palette for cursors ─────────────────────────────────────────────────
 
 const CURSOR_COLORS = [
-  '#828fff', '#4ade80', '#f59e0b', '#f472b6',
+  '#00d4ff', '#4ade80', '#f59e0b', '#f472b6',
   '#22d3ee', '#a78bfa', '#fb923c', '#34d399',
 ];
 

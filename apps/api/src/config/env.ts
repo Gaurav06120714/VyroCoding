@@ -51,6 +51,11 @@ interface Env {
   NVIDIA_API_KEY: string;
   NVIDIA_BASE_URL: string;
   AI_MODEL: string;
+
+  // Email (Resend) — optional in dev, required in production
+  RESEND_API_KEY: string;      // re_... from resend.com; empty = dev mode (no emails sent)
+  EMAIL_FROM: string;          // e.g. "VyroCoding <noreply@yourdomain.com>"
+  APP_URL: string;             // e.g. https://vyrocoding.com — used in reset links
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -102,6 +107,12 @@ function validateProductionConfig(parsed: Env): void {
   if (!parsed.DATABASE_URL || parsed.DATABASE_URL.includes('localhost')) {
     errors.push('DATABASE_URL should not point to localhost in production');
   }
+  if (!parsed.RESEND_API_KEY) {
+    errors.push('RESEND_API_KEY is required in production to send password reset emails');
+  }
+  if (parsed.APP_URL.includes('localhost')) {
+    errors.push('APP_URL should not point to localhost in production');
+  }
 
   if (errors.length > 0) {
     throw new Error(
@@ -147,6 +158,10 @@ function buildEnv(): Env {
     NVIDIA_API_KEY: optional('NVIDIA_API_KEY', ''),
     NVIDIA_BASE_URL: optional('NVIDIA_BASE_URL', 'https://integrate.api.nvidia.com/v1'),
     AI_MODEL: optional('AI_MODEL', 'deepseek-ai/deepseek-r1'),
+
+    RESEND_API_KEY: optional('RESEND_API_KEY', ''),
+    EMAIL_FROM: optional('EMAIL_FROM', 'VyroCoding <noreply@vyrocoding.com>'),
+    APP_URL: optional('APP_URL', 'http://localhost:3000'),
   };
 
   validateProductionConfig(parsed);

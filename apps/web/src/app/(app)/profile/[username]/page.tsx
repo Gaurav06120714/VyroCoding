@@ -59,8 +59,8 @@ export default function UserProfilePage() {
     <div className="min-h-screen bg-canvas p-8 max-w-4xl mx-auto">
       {/* Header */}
       <div className="flex items-center gap-5 mb-8">
-        <div className="w-16 h-16 rounded-full bg-[rgba(94,106,210,0.2)] border border-[rgba(130,143,255,0.3)] flex items-center justify-center shrink-0">
-          <span className="text-2xl font-bold text-[#828fff]">
+        <div className="w-16 h-16 rounded-full bg-[rgba(0,212,255,0.2)] border border-[rgba(130,143,255,0.3)] flex items-center justify-center shrink-0">
+          <span className="text-2xl font-bold text-[#00d4ff]">
             {profile.username.charAt(0).toUpperCase()}
           </span>
         </div>

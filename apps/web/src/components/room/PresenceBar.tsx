@@ -14,7 +14,7 @@ interface PresenceBarProps {
 
 function StatusDot({ status }: { status: WsStatus }) {
   if (status === 'connected')
-    return <span className="w-1.5 h-1.5 rounded-full bg-[#27a644] shadow-[0_0_4px_rgba(39,166,68,0.8)]" />;
+    return <span className="w-1.5 h-1.5 rounded-full bg-[#10b981] shadow-[0_0_4px_rgba(16,185,129,0.8)]" />;
   if (status === 'connecting')
     return <Loader2 className="w-3 h-3 text-yellow-400 animate-spin" />;
   return <WifiOff className="w-3 h-3 text-[#e5534b]" />;
@@ -51,7 +51,7 @@ export function PresenceBar({
               </span>
             </span>
             {u.isTyping && (
-              <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-[#828fff] border border-[#161b22] flex items-center justify-center">
+              <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-[#00d4ff] border border-[#161b22] flex items-center justify-center">
                 <span className="w-0.5 h-0.5 rounded-full bg-white animate-bounce" />
               </span>
             )}

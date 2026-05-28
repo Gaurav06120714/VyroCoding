@@ -12,8 +12,8 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 const variantClasses: Record<NonNullable<ButtonProps['variant']>, string> = {
   primary:   'lg-btn-primary px-5 h-10 disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none',
   secondary: 'lg-btn-secondary px-5 h-10 disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none',
-  ghost:     'inline-flex items-center justify-center bg-transparent text-white/80 hover:text-white hover:bg-white/5 rounded-[11px] px-5 h-10 font-medium text-sm transition-colors cursor-pointer disabled:opacity-40',
-  danger:    'lg-btn-primary px-5 h-10 disabled:opacity-40 disabled:cursor-not-allowed !bg-[rgba(207,45,86,0.5)] !border-[rgba(207,45,86,0.5)]',
+  ghost:     'inline-flex items-center justify-center bg-transparent text-[#8a9bb5] hover:text-white hover:bg-[rgba(0,212,255,0.06)] rounded-[11px] px-5 h-10 font-medium text-sm transition-all duration-150 cursor-pointer disabled:opacity-40',
+  danger:    'lg-btn-primary px-5 h-10 disabled:opacity-40 disabled:cursor-not-allowed !bg-[rgba(239,68,68,0.5)] !border-[rgba(239,68,68,0.5)]',
 };
 
 const sizeOverrides: Record<NonNullable<ButtonProps['size']>, string> = {

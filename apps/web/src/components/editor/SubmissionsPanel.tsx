@@ -11,7 +11,7 @@ interface SubmissionsPanelProps {
 }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
-  accepted:              { label: 'Accepted',              color: 'text-[#27a644]', icon: <CheckCircle2 className="w-3.5 h-3.5" /> },
+  accepted:              { label: 'Accepted',              color: 'text-[#10b981]', icon: <CheckCircle2 className="w-3.5 h-3.5" /> },
   wrong_answer:          { label: 'Wrong Answer',          color: 'text-[#e5534b]', icon: <XCircle className="w-3.5 h-3.5" /> },
   time_limit_exceeded:   { label: 'Time Limit',            color: 'text-yellow-400', icon: <Clock className="w-3.5 h-3.5" /> },
   memory_limit_exceeded: { label: 'Memory Limit',          color: 'text-orange-400', icon: <Cpu className="w-3.5 h-3.5" /> },

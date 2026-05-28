@@ -1,17 +1,22 @@
 /**
- * AI service — DeepSeek v4 Pro via NVIDIA NIM
+ * AI service — Ollama (local) with NVIDIA NIM (cloud) fallback
  *
- * Uses the OpenAI-compatible client so switching providers later requires
- * only changing env vars (base_url + model), not code.
- *
- * All methods accept an onChunk callback for streaming responses.
- * Set onChunk=undefined to collect the full response synchronously.
+ * Provider detection is cached for 60 s so we don't probe Ollama on every request.
+ * All streaming calls include per-request abort timeouts and automatic retry on
+ * transient failures so the front-end gets a response even when the local daemon
+ * hiccups.
  */
 
 import OpenAI from 'openai';
 import { env } from '../config/env.js';
+import {
+  isOllamaRunning,
+  listModels,
+  pickCodingModel,
+  startOllamaDaemon,
+} from './ollama.service.js';
 
-// ── Auto-Detect AI Provider (Ollama Local vs NVIDIA NIM Remote) ───────────────
+// ── Provider cache ────────────────────────────────────────────────────────────
 
 interface AiProvider {
   client: OpenAI;
@@ -19,7 +24,6 @@ interface AiProvider {
   provider: string;
 }
 
-// Cache provider for 60 seconds so we don't re-probe Ollama on every request
 let _cachedProvider: AiProvider | null = null;
 let _cacheExpiry = 0;
 
@@ -28,95 +32,65 @@ export function clearProviderCache(): void {
   _cacheExpiry = 0;
 }
 
+// ── Provider detection ────────────────────────────────────────────────────────
+
 export async function detectAiProvider(): Promise<AiProvider> {
   const now = Date.now();
-  if (_cachedProvider && now < _cacheExpiry) {
-    return _cachedProvider;
-  }
+  if (_cachedProvider && now < _cacheExpiry) return _cachedProvider;
 
-  // 1. Attempt to connect to locally running Ollama instance (at default http://127.0.0.1:11434)
+  // 1. Try local Ollama
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 600); // 600ms quick ping timeout
+    let running = await isOllamaRunning(800);
 
-    const res = await fetch('http://127.0.0.1:11434/api/tags', { signal: controller.signal });
-    clearTimeout(timeoutId);
+    // If not running, attempt a background start (non-blocking — just 2 s wait)
+    if (!running) {
+      await startOllamaDaemon();
+      running = await isOllamaRunning(2000);
+    }
 
-    if (res.ok) {
-      const data = (await res.json()) as { models?: Array<{ name: string }> };
-      if (data.models && data.models.length > 0) {
-        // Filter out non-chat embedding models (containing "embed")
-        const chatModels = data.models.filter(
-          m => !m.name.toLowerCase().includes('embed')
-        );
+    if (running) {
+      const models     = await listModels();
+      const activeModel = pickCodingModel(models);
 
-        if (chatModels.length > 0) {
-          // Prioritize known chat and programming models
-          const prioritized = chatModels.find(m => {
-            const name = m.name.toLowerCase();
-            return (
-              name.includes('coder') ||
-              name.includes('deepseek') ||
-              name.includes('r1') ||
-              name.includes('qwen') ||
-              name.includes('llama') ||
-              name.includes('instruct') ||
-              name.includes('chat')
-            );
-          });
-
-          const localModel = prioritized ? prioritized.name : chatModels[0].name;
-          const ollamaClient = new OpenAI({
-            apiKey: 'ollama', // Ollama doesn't require a key but OpenAI client expects a non-empty string
-            baseURL: 'http://127.0.0.1:11434/v1',
-          });
-          const result: AiProvider = {
-            client: ollamaClient,
-            model: localModel,
-            provider: 'Ollama (Local)',
-          };
-          _cachedProvider = result;
-          _cacheExpiry = Date.now() + 60_000; // cache 60s
-          return result;
-        }
+      if (activeModel) {
+        const result: AiProvider = {
+          client: new OpenAI({ apiKey: 'ollama', baseURL: 'http://127.0.0.1:11434/v1' }),
+          model: activeModel,
+          provider: 'Ollama (Local)',
+        };
+        _cachedProvider = result;
+        _cacheExpiry    = now + 60_000;
+        return result;
       }
     }
   } catch {
-    // Ollama is either not running locally or request timed out, fall through to remote
+    // fall through to NIM
   }
 
-  // 2. Fallback to configured NVIDIA NIM remote cloud provider
+  // 2. NVIDIA NIM fallback
   if (!env.NVIDIA_API_KEY) {
     throw new Error(
-      'AI assistant requires a local Ollama instance running at http://127.0.0.1:11434\n' +
-        'OR a valid NVIDIA_API_KEY set in your .env file for cloud NIM access.',
+      'No AI provider available. Install Ollama (https://ollama.com) or ' +
+      'set NVIDIA_API_KEY in your .env for cloud access.',
     );
   }
 
-  const nimClient = new OpenAI({
-    apiKey: env.NVIDIA_API_KEY,
-    baseURL: env.NVIDIA_BASE_URL,
-  });
-
   const nimResult: AiProvider = {
-    client: nimClient,
+    client: new OpenAI({ apiKey: env.NVIDIA_API_KEY, baseURL: env.NVIDIA_BASE_URL }),
     model: env.AI_MODEL,
     provider: 'NVIDIA NIM (Remote)',
   };
   _cachedProvider = nimResult;
-  _cacheExpiry = Date.now() + 60_000; // cache 60s
+  _cacheExpiry    = now + 60_000;
   return nimResult;
 }
 
-// Helper to query active AI health status dynamically
+// ── Status helper ─────────────────────────────────────────────────────────────
+
 export async function getAiStatus() {
   try {
     const { model, provider } = await detectAiProvider();
-    return {
-      available: true,
-      model,
-      provider,
-    };
+    return { available: true, model, provider };
   } catch (err) {
     return {
       available: false,
@@ -126,13 +100,6 @@ export async function getAiStatus() {
     };
   }
 }
-
-// ── System prompts ────────────────────────────────────────────────────────────
-
-const SYSTEM_BASE = `You are an expert competitive programming assistant embedded inside VyroCoding, a real-time collaborative coding platform.
-You help developers understand algorithms, debug code, and improve their solutions.
-Be concise, precise, and technical. Use code blocks with language tags when showing code.
-Never reveal the full solution unless the user explicitly asks for it.`;
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -146,40 +113,106 @@ export interface StreamOptions {
   onDone?: () => void;
 }
 
+// ── Retry helper ──────────────────────────────────────────────────────────────
+
+const RETRYABLE_CODES = new Set(['ECONNRESET', 'ECONNREFUSED', 'ETIMEDOUT', 'ENOTFOUND']);
+
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  maxAttempts = 3,
+  baseDelayMs = 400,
+): Promise<T> {
+  let lastErr: unknown;
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    try {
+      return await fn();
+    } catch (err: unknown) {
+      lastErr = err;
+      const code = (err as NodeJS.ErrnoException)?.code ?? '';
+      const isRetryable =
+        RETRYABLE_CODES.has(code) ||
+        (err instanceof Error && /connection|timeout|reset/i.test(err.message));
+
+      if (!isRetryable || attempt === maxAttempts - 1) break;
+
+      // Invalidate cache so next attempt re-probes the provider
+      clearProviderCache();
+      await new Promise((r) => setTimeout(r, baseDelayMs * 2 ** attempt));
+    }
+  }
+  throw lastErr;
+}
+
 // ── Core streaming helper ─────────────────────────────────────────────────────
+
+/** Timeout: 120 s for local Ollama (cold-start is slow), 60 s for cloud NIM */
+const TIMEOUT_OLLAMA_MS = 120_000;
+const TIMEOUT_NIM_MS    =  60_000;
 
 export async function streamCompletion(
   messages: AiMessage[],
   opts: StreamOptions,
   temperature = 0.6,
 ): Promise<void> {
-  const { client, model, provider } = await detectAiProvider();
+  await withRetry(async () => {
+    const { client, model, provider } = await detectAiProvider();
 
-  const requestBody: any = {
-    model,
-    messages,
-    temperature,
-    top_p: 0.95,
-    max_tokens: 16384,
-    stream: true,
-  };
+    const isOllama    = provider.includes('Ollama');
+    const timeoutMs   = isOllama ? TIMEOUT_OLLAMA_MS : TIMEOUT_NIM_MS;
 
-  // Only pass thinking template args for DeepSeek models to avoid breaking other models (like Llama/Qwen)
-  if (model.toLowerCase().includes('deepseek')) {
-    requestBody.extra_body = { chat_template_kwargs: { thinking: false } };
-  }
+    const requestBody: Record<string, unknown> = {
+      model,
+      messages,
+      temperature,
+      top_p: 0.95,
+      max_tokens: 8192,
+      stream: true,
+    };
 
-  const stream = await client.chat.completions.create(requestBody);
+    // DeepSeek-specific param — skip for Ollama / other providers
+    if (!isOllama && model.toLowerCase().includes('deepseek')) {
+      requestBody['extra_body'] = { chat_template_kwargs: { thinking: false } };
+    }
 
-  for await (const chunk of stream as unknown as AsyncIterable<OpenAI.Chat.Completions.ChatCompletionChunk>) {
-    const text = chunk.choices?.[0]?.delta?.content;
-    if (text) opts.onChunk(text);
-  }
-  opts.onDone?.();
+    // Per-request abort controller for timeout
+    const controller = new AbortController();
+    const timeoutId  = setTimeout(() => {
+      controller.abort(new Error(`AI request timed out after ${timeoutMs / 1000}s`));
+    }, timeoutMs);
+
+    try {
+      const stream = await (client.chat.completions.create as Function)({
+        ...requestBody,
+        signal: controller.signal,
+      });
+
+      let receivedAny = false;
+      for await (const chunk of stream as AsyncIterable<OpenAI.Chat.Completions.ChatCompletionChunk>) {
+        const text = chunk.choices?.[0]?.delta?.content;
+        if (text) { opts.onChunk(text); receivedAny = true; }
+      }
+
+      // If Ollama returned nothing (model loading / first cold start), retry
+      if (!receivedAny && isOllama) {
+        clearProviderCache();
+        throw Object.assign(new Error('Empty response from Ollama — retrying'), { code: 'ECONNRESET' });
+      }
+
+      opts.onDone?.();
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  });
 }
 
+// ── System prompt ─────────────────────────────────────────────────────────────
+
+const SYSTEM_BASE = `You are an expert competitive programming assistant embedded inside VyroCoding, a real-time collaborative coding platform.
+You help developers understand algorithms, debug code, and improve their solutions.
+Be concise, precise, and technical. Use code blocks with language tags when showing code.
+Never reveal the full solution unless the user explicitly asks for it.`;
+
 // ── Feature: Hint ─────────────────────────────────────────────────────────────
-// Gives a nudge toward the solution WITHOUT revealing the approach fully.
 
 export async function streamHint(opts: {
   problemTitle: string;
@@ -211,7 +244,6 @@ Give me a small, non-spoiler hint that nudges me in the right direction. Do NOT 
 }
 
 // ── Feature: Explain ──────────────────────────────────────────────────────────
-// Explains what the user's current code does step-by-step.
 
 export async function streamExplain(opts: {
   userCode: string;
@@ -236,7 +268,6 @@ Be concise. Cover: what it does, the algorithm/approach, time/space complexity i
 }
 
 // ── Feature: Review ───────────────────────────────────────────────────────────
-// Reviews code for correctness, edge cases, and improvements.
 
 export async function streamReview(opts: {
   userCode: string;
@@ -263,7 +294,6 @@ Format your response with clear sections.`,
 }
 
 // ── Feature: Debug ────────────────────────────────────────────────────────────
-// Helps debug a wrong answer or runtime error.
 
 export async function streamDebug(opts: {
   userCode: string;
@@ -297,7 +327,6 @@ Identify the bug, explain why it happens, and suggest a fix (don't rewrite the w
 }
 
 // ── Feature: Free chat ────────────────────────────────────────────────────────
-// Multi-turn conversation with code context injected.
 
 export async function streamChat(opts: {
   history: AiMessage[];
@@ -317,7 +346,6 @@ export async function streamChat(opts: {
 
   const messages: AiMessage[] = [
     systemMsg,
-    // Keep last 10 turns to stay within context window
     ...opts.history.slice(-10),
     { role: 'user', content: opts.userMessage },
   ];

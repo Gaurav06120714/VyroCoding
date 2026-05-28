@@ -128,14 +128,14 @@ export function RoomHeader({
               className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-mono font-semibold border"
               style={{
                 background: timerExpired
-                  ? 'rgba(207,45,86,0.15)'
+                  ? 'rgba(239,68,68,0.15)'
                   : isLow
-                  ? 'rgba(207,45,86,0.10)'
+                  ? 'rgba(239,68,68,0.10)'
                   : 'rgba(255,255,255,0.05)',
                 borderColor: timerExpired || isLow
-                  ? 'rgba(207,45,86,0.3)'
+                  ? 'rgba(239,68,68,0.3)'
                   : 'rgba(255,255,255,0.1)',
-                color: timerExpired || isLow ? '#cf2d56' : '#f7f8f8',
+                color: timerExpired || isLow ? '#ef4444' : '#f7f8f8',
               }}
             >
               <Timer className="w-3.5 h-3.5" />
@@ -181,12 +181,12 @@ export function RoomHeader({
                     className="relative flex items-center justify-center w-6 h-6 rounded-full text-[9px] font-bold transition-all"
                     style={{
                       background: p.speaking && !p.muted
-                        ? 'rgba(39,166,68,0.25)'
+                        ? 'rgba(16,185,129,0.25)'
                         : 'rgba(255,255,255,0.07)',
                       border: p.speaking && !p.muted
-                        ? '1.5px solid rgba(39,166,68,0.6)'
+                        ? '1.5px solid rgba(16,185,129,0.6)'
                         : '1.5px solid rgba(255,255,255,0.12)',
-                      color: p.speaking ? '#27a644' : 'rgba(255,255,255,0.5)',
+                      color: p.speaking ? '#10b981' : 'rgba(255,255,255,0.5)',
                     }}
                   >
                     {p.muted ? '🔇' : p.username.charAt(0).toUpperCase()}
@@ -202,8 +202,8 @@ export function RoomHeader({
                 title={micMuted ? 'Unmute mic' : 'Mute mic'}
                 className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-[9px] text-xs font-medium transition-all ${
                   micMuted
-                    ? 'bg-[rgba(207,45,86,0.15)] text-[#cf2d56] border border-[rgba(207,45,86,0.25)]'
-                    : 'bg-[rgba(39,166,68,0.12)] text-easy border border-[rgba(39,166,68,0.2)]'
+                    ? 'bg-[rgba(239,68,68,0.15)] text-[#ef4444] border border-[rgba(239,68,68,0.25)]'
+                    : 'bg-[rgba(16,185,129,0.12)] text-easy border border-[rgba(16,185,129,0.2)]'
                 }`}
               >
                 {micMuted ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
@@ -213,7 +213,7 @@ export function RoomHeader({
               <button
                 onClick={onLeaveVoice}
                 title="Leave voice"
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-[9px] text-xs font-medium bg-[rgba(207,45,86,0.12)] text-[#cf2d56] border border-[rgba(207,45,86,0.2)] hover:bg-[rgba(207,45,86,0.2)] transition-colors"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-[9px] text-xs font-medium bg-[rgba(239,68,68,0.12)] text-[#ef4444] border border-[rgba(239,68,68,0.2)] hover:bg-[rgba(239,68,68,0.2)] transition-colors"
               >
                 <PhoneOff className="w-3.5 h-3.5" />
                 Leave
@@ -223,7 +223,7 @@ export function RoomHeader({
             <button
               onClick={onJoinVoice}
               title="Join voice chat"
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-[9px] text-xs font-medium bg-white/[0.06] text-white/50 border border-white/[0.1] hover:bg-[rgba(39,166,68,0.12)] hover:text-easy hover:border-[rgba(39,166,68,0.2)] transition-all"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-[9px] text-xs font-medium bg-white/[0.06] text-white/50 border border-white/[0.1] hover:bg-[rgba(16,185,129,0.12)] hover:text-easy hover:border-[rgba(16,185,129,0.2)] transition-all"
             >
               <PhoneCall className="w-3.5 h-3.5" />
               Voice
@@ -251,7 +251,7 @@ export function RoomHeader({
           {/* Status badge */}
           <span className={`text-xs font-medium rounded-full px-3 py-1 ${
             room.status === 'active'  ? 'bg-easy/15 text-easy'
-            : room.status === 'waiting' ? 'bg-[rgba(245,166,35,0.15)] text-[#f5a623]'
+            : room.status === 'waiting' ? 'bg-[rgba(245,158,11,0.15)] text-[#f59e0b]'
             : 'bg-surface2 text-ink-subtle'
           }`}>
             {room.status.charAt(0).toUpperCase() + room.status.slice(1)}
@@ -261,7 +261,7 @@ export function RoomHeader({
 
       {/* Mic error banner */}
       {micError && (
-        <div className="px-4 py-2 text-xs text-[#cf2d56] bg-[rgba(207,45,86,0.08)] border-b border-[rgba(207,45,86,0.2)] flex items-center gap-2">
+        <div className="px-4 py-2 text-xs text-[#ef4444] bg-[rgba(239,68,68,0.08)] border-b border-[rgba(239,68,68,0.2)] flex items-center gap-2">
           <MicOff className="w-3.5 h-3.5 shrink-0" />
           {micError}
         </div>

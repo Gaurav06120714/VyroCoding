@@ -13,14 +13,14 @@ interface ExecutionFeedProps {
 }
 
 function statusIcon(status?: string) {
-  if (!status) return <Loader2 className="w-3 h-3 animate-spin text-[#828fff]" />;
-  if (status === 'accepted') return <CheckCircle2 className="w-3 h-3 text-[#27a644]" />;
+  if (!status) return <Loader2 className="w-3 h-3 animate-spin text-[#00d4ff]" />;
+  if (status === 'accepted') return <CheckCircle2 className="w-3 h-3 text-[#10b981]" />;
   return <XCircle className="w-3 h-3 text-[#e5534b]" />;
 }
 
 function statusColor(status?: string) {
-  if (!status) return 'text-[#828fff]';
-  if (status === 'accepted') return 'text-[#27a644]';
+  if (!status) return 'text-[#00d4ff]';
+  if (status === 'accepted') return 'text-[#10b981]';
   return 'text-[#e5534b]';
 }
 
@@ -46,7 +46,7 @@ export function ExecutionFeed({ items, currentUserId }: ExecutionFeedProps) {
             key={item.id}
             className="flex items-center gap-1.5 bg-[#0d1117]/90 border border-white/[0.08] rounded-full px-2.5 py-1 text-[10px] backdrop-blur-sm shadow-lg animate-fade-in-up"
           >
-            <Zap className="w-2.5 h-2.5 text-[#828fff]" />
+            <Zap className="w-2.5 h-2.5 text-[#00d4ff]" />
             <span className="text-white/60 font-medium">{item.username}</span>
             {statusIcon(item.type === 'start' ? undefined : item.status)}
             <span className={statusColor(item.type === 'start' ? undefined : item.status)}>

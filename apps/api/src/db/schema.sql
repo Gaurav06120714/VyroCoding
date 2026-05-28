@@ -6,18 +6,23 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- ─── Users ───────────────────────────────────────────────────────────────────
 
 CREATE TABLE IF NOT EXISTS users (
-  id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  username      VARCHAR(50)  UNIQUE NOT NULL,
-  email         VARCHAR(255) UNIQUE NOT NULL,
-  password_hash VARCHAR(255) NOT NULL,
-  rating        INTEGER DEFAULT 1200,
-  problems_solved INTEGER DEFAULT 0,
-  created_at    TIMESTAMPTZ DEFAULT NOW()
+  id                  UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  username            VARCHAR(50)  UNIQUE NOT NULL,
+  email               VARCHAR(255) UNIQUE NOT NULL,
+  password_hash       VARCHAR(255) NOT NULL,
+  rating              INTEGER DEFAULT 1200,
+  problems_solved     INTEGER DEFAULT 0,
+  created_at          TIMESTAMPTZ DEFAULT NOW(),
+  -- Password reset: store SHA-256 hash of the raw token, never the raw token itself
+  reset_token_hash    VARCHAR(64),
+  reset_token_expires TIMESTAMPTZ
 );
 
-CREATE INDEX IF NOT EXISTS idx_users_email    ON users(email);
-CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
-CREATE INDEX IF NOT EXISTS idx_users_rating   ON users(rating DESC);
+CREATE INDEX IF NOT EXISTS idx_users_email       ON users(email);
+CREATE INDEX IF NOT EXISTS idx_users_username    ON users(username);
+CREATE INDEX IF NOT EXISTS idx_users_rating      ON users(rating DESC);
+CREATE INDEX IF NOT EXISTS idx_users_reset_token ON users(reset_token_hash)
+  WHERE reset_token_hash IS NOT NULL;
 
 -- ─── Problems ────────────────────────────────────────────────────────────────
 

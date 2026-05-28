@@ -70,7 +70,7 @@ export default function LeaderboardPage() {
                     <tr
                       key={entry.userId}
                       className={`border-b border-white/[0.05] last:border-b-0 hover:bg-white/[0.04] transition-colors ${
-                        isCurrentUser ? 'bg-[rgba(94,106,210,0.05)]' : ''
+                        isCurrentUser ? 'bg-[rgba(0,212,255,0.05)]' : ''
                       }`}
                     >
                       <td className="px-6 py-4 w-20">
@@ -82,21 +82,21 @@ export default function LeaderboardPage() {
                         <div className="flex items-center gap-3">
                           <div className={`w-8 h-8 rounded-full border flex items-center justify-center text-xs font-semibold ${
                             isCurrentUser
-                              ? 'bg-[rgba(94,106,210,0.2)] border-[rgba(130,143,255,0.4)] text-[#828fff]'
+                              ? 'bg-[rgba(0,212,255,0.2)] border-[rgba(130,143,255,0.4)] text-[#00d4ff]'
                               : 'bg-white/8 border-white/12 text-white/50'
                           }`}>
                             {entry.username.charAt(0).toUpperCase()}
                           </div>
                           <div>
                             <span className={`text-sm font-medium ${
-                              entry.rank === 1 ? 'text-[#828fff] font-bold' :
+                              entry.rank === 1 ? 'text-[#00d4ff] font-bold' :
                               entry.rank <= 3  ? 'text-white/70 font-semibold' :
                               'text-white'
                             }`}>
                               {entry.username}
                             </span>
                             {isCurrentUser && (
-                              <span className="ml-2 text-[10px] text-[#828fff]">(you)</span>
+                              <span className="ml-2 text-[10px] text-[#00d4ff]">(you)</span>
                             )}
                           </div>
                         </div>

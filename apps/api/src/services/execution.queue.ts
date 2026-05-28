@@ -1,15 +1,33 @@
 import { env } from '../config/env.js';
 /**
  * BullMQ execution queue — async code execution with result broadcasting.
- * Jobs flow: enqueue → Judge0 → store result → broadcast to room via Pub/Sub
+ * Jobs flow: enqueue → Judge0 batch → store result → broadcast to room via Pub/Sub
  */
 import { Queue, Worker, Job } from 'bullmq';
 import type { Redis } from 'ioredis';
-import dotenv from 'dotenv';
-dotenv.config();
 
-const REDIS_URL = env.REDIS_URL;
 const QUEUE_NAME = 'code-execution';
+
+/**
+ * Parse REDIS_URL into BullMQ connection options.
+ * BullMQ's `connection` field accepts ioredis options (host/port/password),
+ * not a raw URL string, so we parse it here.
+ */
+function parseRedisUrl(url: string): { host: string; port: number; password?: string; db?: number } {
+  try {
+    const u = new URL(url);
+    return {
+      host: u.hostname || 'localhost',
+      port: u.port ? parseInt(u.port, 10) : 6379,
+      password: u.password || undefined,
+      db: u.pathname && u.pathname.length > 1 ? parseInt(u.pathname.slice(1), 10) : undefined,
+    };
+  } catch {
+    return { host: 'localhost', port: 6379 };
+  }
+}
+
+const redisConnection = parseRedisUrl(env.REDIS_URL) as unknown as Redis;
 
 // ── Job payload ────────────────────────────────────────────────────────────────
 
@@ -43,7 +61,7 @@ let executionQueue: Queue<ExecutionJobData, ExecutionJobResult> | null = null;
 export function getExecutionQueue(): Queue<ExecutionJobData, ExecutionJobResult> {
   if (!executionQueue) {
     executionQueue = new Queue<ExecutionJobData, ExecutionJobResult>(QUEUE_NAME, {
-      connection: { host: 'localhost', port: 6379 } as unknown as Redis,
+      connection: redisConnection,
       defaultJobOptions: {
         attempts: 2,
         backoff: { type: 'fixed', delay: 2000 },
@@ -66,7 +84,7 @@ export async function enqueueExecution(data: ExecutionJobData): Promise<string> 
   return job.id ?? data.submissionId;
 }
 
-// ── Worker (runs in the same process for simplicity; extract to separate worker for scale) ───
+// ── Worker ─────────────────────────────────────────────────────────────────────
 
 let worker: Worker | null = null;
 
@@ -78,7 +96,8 @@ export function startExecutionWorker(): void {
     async (job: Job<ExecutionJobData, ExecutionJobResult>) => {
       const { submissionId, code, languageId, testCases, roomId, userId, username } = job.data;
 
-      const { submitAndWait, wrapCode } = await import('./judge0.service.js');
+      const { submitAndWait, submitBatchAndWait } = await import('./judge0.service.js');
+      const { SubmissionStatus } = await import('@vyro/types');
       const { query } = await import('../db/client.js');
       const { publishToRoom } = await import('./pubsub.service.js');
       const { Language } = await import('@vyro/types');
@@ -99,50 +118,98 @@ export function startExecutionWorker(): void {
         ['processing', submissionId]
       );
 
-      // Run against all test cases
-      let passed = 0;
-      let lastResult: Awaited<ReturnType<typeof submitAndWait>> | null = null;
+      // Pre-check for compile error using first test case
+      if (testCases.length === 0) {
+        await query('UPDATE submissions SET status = $1 WHERE id = $2', ['accepted', submissionId]);
+        return {
+          submissionId,
+          status: 'accepted',
+          testsPassed: 0,
+          testsTotal: 0,
+        };
+      }
 
-      const visibleCases = testCases.filter((tc) => !tc.isHidden);
+      const preCheck = await submitAndWait(
+        code,
+        languageId as typeof Language[keyof typeof Language],
+        testCases[0].input,
+        20,
+        500
+      );
 
-      for (const tc of visibleCases) {
-        try {
-          const wrappedCode = wrapCode(code, languageId as typeof Language[keyof typeof Language]);
-          const result = await submitAndWait(wrappedCode, languageId as typeof Language[keyof typeof Language], tc.input, 20, 500);
-          lastResult = result;
-          const actual = (result.stdout ?? '').trim();
-          if (result.submissionStatus === 'accepted' && actual === tc.expectedOutput.trim()) {
-            passed++;
-          } else {
-            break; // Stop on first failure (like LeetCode)
-          }
-        } catch {
-          break;
+      if (preCheck.submissionStatus === SubmissionStatus.CompileError) {
+        const compileErr = preCheck.compileOutput ?? preCheck.stderr ?? 'Compile error';
+        await query(
+          `UPDATE submissions SET status = $1, stderr = $2 WHERE id = $3`,
+          ['compile_error', compileErr, submissionId]
+        );
+
+        const jobResult: ExecutionJobResult = {
+          submissionId,
+          status: 'compile_error',
+          compileOutput: compileErr,
+          testsPassed: 0,
+          testsTotal: testCases.length,
+        };
+
+        if (roomId) {
+          await publishToRoom(roomId, {
+            type: 'execution-complete',
+            ...jobResult,
+            userId,
+            username,
+          });
+        }
+
+        return jobResult;
+      }
+
+      // Submit all test cases via batch API
+      const batchResults = await submitBatchAndWait(
+        code,
+        languageId as typeof Language[keyof typeof Language],
+        testCases,
+        30,
+        800
+      );
+
+      // Aggregate: find first fail, count passes
+      let testsPassed = 0;
+      let totalTimeMs = 0;
+      let maxMemoryKb = 0;
+      let firstFailIdx = -1;
+
+      for (let i = 0; i < batchResults.length; i++) {
+        const r = batchResults[i];
+        if (r.passed) {
+          testsPassed++;
+          totalTimeMs += r.timeMs ?? 0;
+          maxMemoryKb = Math.max(maxMemoryKb, r.memoryKb ?? 0);
+        } else if (firstFailIdx === -1) {
+          firstFailIdx = i;
         }
       }
 
-      const allPassed = passed === visibleCases.length;
-      const finalStatus = lastResult?.submissionStatus === 'runtime_error'
-        ? 'runtime_error'
-        : lastResult?.submissionStatus === 'compile_error'
-        ? 'compile_error'
-        : lastResult?.submissionStatus === 'time_limit_exceeded'
-        ? 'time_limit_exceeded'
-        : allPassed ? 'accepted' : 'wrong_answer';
+      const allPassed = testsPassed === batchResults.length;
+      const firstFail = firstFailIdx >= 0 ? batchResults[firstFailIdx] : null;
 
-      // Update DB with final result
+      let finalStatus: string;
+      if (allPassed) {
+        finalStatus = 'accepted';
+      } else if (firstFail) {
+        finalStatus = firstFail.verdict;
+      } else {
+        finalStatus = 'wrong_answer';
+      }
+
+      const failStdout = firstFail ? firstFail.actual : (batchResults[batchResults.length - 1]?.actual ?? '');
+      const failStderr = firstFail ? (firstFail.error ?? '') : '';
+
       await query(
         `UPDATE submissions
          SET status = $1, stdout = $2, stderr = $3, time_ms = $4, memory_kb = $5
          WHERE id = $6`,
-        [
-          finalStatus,
-          lastResult?.stdout ?? null,
-          lastResult?.stderr ?? null,
-          lastResult?.timeMs ?? null,
-          lastResult?.memoryKb ?? null,
-          submissionId,
-        ]
+        [finalStatus, failStdout, failStderr, totalTimeMs, maxMemoryKb, submissionId]
       );
 
       // Update user stats if accepted
@@ -161,13 +228,12 @@ export function startExecutionWorker(): void {
       const jobResult: ExecutionJobResult = {
         submissionId,
         status: finalStatus,
-        stdout: lastResult?.stdout,
-        stderr: lastResult?.stderr,
-        compileOutput: lastResult?.compileOutput,
-        timeMs: lastResult?.timeMs,
-        memoryKb: lastResult?.memoryKb,
-        testsPassed: passed,
-        testsTotal: visibleCases.length,
+        stdout: failStdout,
+        stderr: failStderr,
+        timeMs: totalTimeMs || undefined,
+        memoryKb: maxMemoryKb || undefined,
+        testsPassed,
+        testsTotal: batchResults.length,
       };
 
       // Broadcast result to room
@@ -183,7 +249,7 @@ export function startExecutionWorker(): void {
       return jobResult;
     },
     {
-      connection: { host: 'localhost', port: 6379 } as unknown as Redis,
+      connection: redisConnection,
       concurrency: 5,
     }
   );

@@ -146,7 +146,7 @@ export default function DashboardPage() {
           <div className="col-span-12 md:col-span-8">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-sm font-semibold text-white">Recent Activity</h2>
-              <Link href="/problems" className="text-xs text-[#828fff] hover:underline">View all</Link>
+              <Link href="/problems" className="text-xs text-[#00d4ff] hover:underline">View all</Link>
             </div>
             <div className="lg-card overflow-hidden">
               {loadingActivity ? (
@@ -174,7 +174,7 @@ export default function DashboardPage() {
                     {recentActivity.slice(0, 6).map((item, i) => (
                       <tr key={item.id} className={`border-b border-white/[0.05] hover:bg-white/[0.04] transition-colors ${i === Math.min(recentActivity.length, 6) - 1 ? 'border-b-0' : ''}`}>
                         <td className="px-4 py-4">
-                          <Link href={`/problems/${item.problem.slug}`} className="text-sm text-white hover:text-[#828fff] transition-colors">
+                          <Link href={`/problems/${item.problem.slug}`} className="text-sm text-white hover:text-[#00d4ff] transition-colors">
                             {item.problem.title}
                           </Link>
                         </td>

@@ -34,7 +34,7 @@ function relativeTime(iso: string): string {
   return `${Math.floor(mins / 60)}h ago`;
 }
 
-const RANK_COLORS = ['#f5a623', '#8a8f98', '#cd7f32'];
+const RANK_COLORS = ['#f59e0b', '#8a8f98', '#cd7f32'];
 
 export function RoomScoreboard({ roomId, lastSubmissionResult }: RoomScoreboardProps) {
   const [entries, setEntries] = useState<ScoreboardEntry[]>([]);

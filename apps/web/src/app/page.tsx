@@ -82,12 +82,12 @@ export default function LandingPage() {
             <div className="w-3 h-3 rounded-full bg-[#28c840]" />
             <span className="ml-3 text-[11px] text-white/30 font-mono">two-sum.js — Vyro Coding</span>
             <div className="ml-auto flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 bg-[rgba(39,166,68,0.15)] text-easy text-[11px] font-semibold px-2.5 py-1 rounded-full">
+              <span className="inline-flex items-center gap-1.5 bg-[rgba(16,185,129,0.15)] text-easy text-[11px] font-semibold px-2.5 py-1 rounded-full">
                 <span className="w-1.5 h-1.5 rounded-full bg-easy" />Live
               </span>
               <div className="flex -space-x-1.5">
                 {['A','B','C'].map((c) => (
-                  <div key={c} className="w-6 h-6 rounded-full bg-[rgba(94,106,210,0.2)] border border-white/10 flex items-center justify-center text-[9px] font-bold text-[#828fff]">{c}</div>
+                  <div key={c} className="w-6 h-6 rounded-full bg-[rgba(0,212,255,0.2)] border border-white/10 flex items-center justify-center text-[9px] font-bold text-[#00d4ff]">{c}</div>
                 ))}
               </div>
             </div>
@@ -98,12 +98,12 @@ export default function LandingPage() {
                 {[1,2,3,4,5,6,7,8,9,10].map((n) => <div key={n}>{n}</div>)}
               </div>
               <div className="px-4 py-4 font-mono text-[12px] leading-6 overflow-x-auto flex-1">
-                <div><span className="text-[#828fff]">function</span> <span className="text-[#c0a8dd]">twoSum</span><span className="text-white/50">(nums, target) {'{'}</span></div>
-                <div className="ml-4"><span className="text-[#828fff]">const</span> <span className="text-white">map</span><span className="text-white/50"> = </span><span className="text-[#828fff]">new</span> <span className="text-[#c0a8dd]">Map</span><span className="text-white/50">();</span></div>
-                <div className="ml-4"><span className="text-[#828fff]">for</span><span className="text-white/50"> (</span><span className="text-[#828fff]">let</span><span className="text-white"> i</span><span className="text-white/50"> = 0; i &lt; nums.length; i++) {'{'}</span></div>
-                <div className="ml-8"><span className="text-[#828fff]">const</span><span className="text-white"> comp</span><span className="text-white/50"> = target - nums[i];</span></div>
-                <div className="ml-8"><span className="text-[#828fff]">if</span><span className="text-white/50"> (map.</span><span className="text-[#c0a8dd]">has</span><span className="text-white/50">(comp))</span></div>
-                <div className="ml-12"><span className="text-[#828fff]">return</span><span className="text-white/50"> [map.</span><span className="text-[#c0a8dd]">get</span><span className="text-white/50">(comp), i];</span></div>
+                <div><span className="text-[#00d4ff]">function</span> <span className="text-[#c0a8dd]">twoSum</span><span className="text-white/50">(nums, target) {'{'}</span></div>
+                <div className="ml-4"><span className="text-[#00d4ff]">const</span> <span className="text-white">map</span><span className="text-white/50"> = </span><span className="text-[#00d4ff]">new</span> <span className="text-[#c0a8dd]">Map</span><span className="text-white/50">();</span></div>
+                <div className="ml-4"><span className="text-[#00d4ff]">for</span><span className="text-white/50"> (</span><span className="text-[#00d4ff]">let</span><span className="text-white"> i</span><span className="text-white/50"> = 0; i &lt; nums.length; i++) {'{'}</span></div>
+                <div className="ml-8"><span className="text-[#00d4ff]">const</span><span className="text-white"> comp</span><span className="text-white/50"> = target - nums[i];</span></div>
+                <div className="ml-8"><span className="text-[#00d4ff]">if</span><span className="text-white/50"> (map.</span><span className="text-[#c0a8dd]">has</span><span className="text-white/50">(comp))</span></div>
+                <div className="ml-12"><span className="text-[#00d4ff]">return</span><span className="text-white/50"> [map.</span><span className="text-[#c0a8dd]">get</span><span className="text-white/50">(comp), i];</span></div>
                 <div className="ml-8"><span className="text-white/50">map.</span><span className="text-[#c0a8dd]">set</span><span className="text-white/50">(nums[i], i);</span></div>
                 <div className="ml-4"><span className="text-white/50">{'}'}</span></div>
                 <div><span className="text-white/50">{'}'}</span></div>
@@ -123,7 +123,7 @@ export default function LandingPage() {
             <span className="w-2.5 h-2.5 rounded-full bg-[#febc2e]/70" />
             <span className="w-2.5 h-2.5 rounded-full bg-[#28c840]/70" />
             <span className="ml-3 text-[11px] text-white/30 font-mono">judge · room-42 · alice_dev</span>
-            <span className="ml-auto inline-flex items-center gap-1.5 bg-[rgba(39,166,68,0.12)] text-easy text-[11px] font-semibold px-2.5 py-1 rounded-full">
+            <span className="ml-auto inline-flex items-center gap-1.5 bg-[rgba(16,185,129,0.12)] text-easy text-[11px] font-semibold px-2.5 py-1 rounded-full">
               <span className="w-1.5 h-1.5 rounded-full bg-easy" />Accepted
             </span>
           </div>
@@ -174,7 +174,7 @@ export default function LandingPage() {
                 <span className="w-2 h-2 rounded-full bg-easy" /><span>room-42 · 3 participants</span>
               </div>
               <div className="text-white/50">{'> Collaborating on: Merge Intervals'}</div>
-              <div className="text-[#828fff] mt-1">{'  alice is typing...'}</div>
+              <div className="text-[#00d4ff] mt-1">{'  alice is typing...'}</div>
             </div>
           </div>
 
@@ -183,8 +183,8 @@ export default function LandingPage() {
               <div className="w-10 h-10 lg rounded-[12px] flex items-center justify-center">
                 <Bot className="w-5 h-5 text-white/60" />
               </div>
-              <span className="inline-flex items-center gap-1.5 bg-[rgba(94,106,210,0.15)] text-[#828fff] text-[11px] font-semibold px-2.5 py-1 rounded-full border border-[rgba(94,106,210,0.25)]">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#828fff]" />AI thinking
+              <span className="inline-flex items-center gap-1.5 bg-[rgba(0,212,255,0.15)] text-[#00d4ff] text-[11px] font-semibold px-2.5 py-1 rounded-full border border-[rgba(0,212,255,0.25)]">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#00d4ff]" />AI thinking
               </span>
             </div>
             <h3 className="font-semibold tracking-[-0.03em] text-white mb-2" style={{ fontSize: 'var(--text-xl)' }}>AI Interviewer</h3>
@@ -217,7 +217,7 @@ export default function LandingPage() {
                   <span className="w-5 text-right text-[11px] text-white/25 font-mono">{idx + 1}</span>
                   <span className="w-20 text-xs text-white/45 truncate">{row.name}</span>
                   <div className="flex-1 bg-white/[0.06] rounded-full h-2 overflow-hidden">
-                    <div className="h-full bg-[rgba(94,106,210,0.7)] rounded-full" style={{ width: `${row.pct}%` }} />
+                    <div className="h-full bg-[rgba(0,212,255,0.7)] rounded-full" style={{ width: `${row.pct}%` }} />
                   </div>
                   <span className="text-[11px] text-white/25 font-mono w-12 text-right">{row.score}</span>
                 </div>

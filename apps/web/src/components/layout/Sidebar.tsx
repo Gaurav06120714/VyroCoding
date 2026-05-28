@@ -54,14 +54,14 @@ export function Sidebar() {
                   className={cn(
                     'relative flex items-center gap-3 text-sm font-medium rounded-[11px] px-3 py-2 transition-all duration-200',
                     active
-                      ? 'lg text-white'
-                      : 'text-white/45 hover:text-white hover:bg-white/[0.06]'
+                      ? 'lg text-[#00d4ff]'
+                      : 'text-[#8a9bb5] hover:text-white hover:bg-[rgba(0,212,255,0.06)]'
                   )}
                 >
                   <Icon className="w-4 h-4 shrink-0" />
                   {label}
                   {active && (
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-[#828fff]" />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-[#00d4ff]" />
                   )}
                 </Link>
               </li>
@@ -77,9 +77,9 @@ export function Sidebar() {
       <div className="p-3 border-t border-white/[0.06]">
         {user ? (
           <div className="space-y-0.5">
-            <Link href={`/profile/${user.username}`} className="flex items-center gap-3 px-3 py-2 hover:bg-white/[0.06] rounded-[11px] transition-colors">
-              <div className="w-7 h-7 rounded-full bg-[rgba(94,106,210,0.2)] border border-white/15 flex items-center justify-center shrink-0">
-                <User className="w-3.5 h-3.5 text-[#828fff]" />
+            <Link href={`/profile/${user.username}`} className="flex items-center gap-3 px-3 py-2 hover:bg-[rgba(0,212,255,0.06)] rounded-[11px] transition-colors">
+              <div className="w-7 h-7 rounded-full bg-[rgba(0,212,255,0.12)] border border-[rgba(0,212,255,0.25)] flex items-center justify-center shrink-0">
+                <User className="w-3.5 h-3.5 text-[#00d4ff]" />
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-medium text-white truncate">{user.username}</p>
@@ -90,7 +90,7 @@ export function Sidebar() {
             {user?.username === 'Gannu' && (
               <Link
                 href="/admin"
-                className="flex items-center gap-3 text-sm font-medium text-white/40 hover:text-white hover:bg-white/[0.06] rounded-[11px] px-3 py-2 transition-colors"
+                className="flex items-center gap-3 text-sm font-medium text-white/40 hover:text-white hover:bg-[rgba(0,212,255,0.06)] rounded-[11px] px-3 py-2 transition-colors"
               >
                 <ShieldCheck className="w-4 h-4 shrink-0" />
                 Admin
@@ -99,14 +99,14 @@ export function Sidebar() {
             {/* Theme toggle */}
             <button
               onClick={toggleTheme}
-              className="flex items-center gap-3 w-full text-sm font-medium text-white/40 hover:text-white hover:bg-white/[0.06] rounded-[11px] px-3 py-2 transition-colors"
+              className="flex items-center gap-3 w-full text-sm font-medium text-white/40 hover:text-white hover:bg-[rgba(0,212,255,0.06)] rounded-[11px] px-3 py-2 transition-colors"
             >
               {theme === 'dark' ? <Sun className="w-4 h-4 shrink-0" /> : <Moon className="w-4 h-4 shrink-0" />}
               {theme === 'dark' ? 'Light mode' : 'Dark mode'}
             </button>
             <button
               onClick={logout}
-              className="flex items-center gap-3 w-full text-sm font-medium text-white/40 hover:text-white hover:bg-white/[0.06] rounded-[11px] px-3 py-2 transition-colors"
+              className="flex items-center gap-3 w-full text-sm font-medium text-white/40 hover:text-white hover:bg-[rgba(0,212,255,0.06)] rounded-[11px] px-3 py-2 transition-colors"
             >
               <LogOut className="w-4 h-4 shrink-0" />
               Sign out
@@ -115,7 +115,7 @@ export function Sidebar() {
         ) : (
           <Link
             href="/login"
-            className="flex items-center gap-3 text-sm font-medium text-white/40 hover:text-white hover:bg-white/[0.06] rounded-[11px] px-3 py-2 transition-colors"
+            className="flex items-center gap-3 text-sm font-medium text-white/40 hover:text-white hover:bg-[rgba(0,212,255,0.06)] rounded-[11px] px-3 py-2 transition-colors"
           >
             <User className="w-4 h-4" />
             Sign in

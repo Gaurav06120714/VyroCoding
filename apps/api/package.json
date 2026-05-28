@@ -23,6 +23,7 @@
     "node-fetch": "^3.3.2",
     "openai": "^6.39.0",
     "pg": "^8.11.3",
+    "resend": "^6.12.4",
     "uuid": "^9.0.1"
   },
   "devDependencies": {

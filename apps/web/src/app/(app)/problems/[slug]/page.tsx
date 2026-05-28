@@ -66,12 +66,53 @@ export default function ProblemPage() {
 
   const codeLoadedRef = useRef(false);
 
+
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
     check();
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
   }, []);
+
+  // react-resizable-panels v4 has a known SSR/hydration issue in Next.js 15:
+  // react-resizable-panels v4 SSR/hydration bug: the Group initialises before
+  // child Panels register, so defaultSize is ignored and panels collapse to ~5%.
+  // Poll every 30ms for 1.5s — catches the library's deferred layout write
+  // regardless of which rAF/microtask it happens in.
+  useEffect(() => {
+    if (loading) return;
+
+    const applyFlex = () => {
+      const left   = document.getElementById('problem-left');
+      const right  = document.getElementById('problem-right');
+      const editor = document.getElementById('problem-editor');
+      const output = document.getElementById('problem-output');
+
+      if (left && right) {
+        const g = parseFloat(left.style.flexGrow || '0');
+        if (g < 20 || g > 80) {
+          left.style.flex  = '38 1 0px';
+          right.style.flex = '62 1 0px';
+        }
+      }
+      if (editor && output) {
+        const g = parseFloat(editor.style.flexGrow || '0');
+        if (g < 20 || g > 90) {
+          editor.style.flex = '65 1 0px';
+          output.style.flex = '35 1 0px';
+        }
+      }
+    };
+
+    // Poll repeatedly for 1.5 s so we catch however late the library writes.
+    const intervalId = setInterval(applyFlex, 30);
+    const stopId     = setTimeout(() => clearInterval(intervalId), 1500);
+
+    return () => {
+      clearInterval(intervalId);
+      clearTimeout(stopId);
+    };
+  }, [loading]);
 
   useEffect(() => {
     languagesApi.list().then((res) => setLanguages(res.data)).catch(() => {});
@@ -169,14 +210,14 @@ export default function ProblemPage() {
   }, [code, language, problem, isRunning]);
 
   // ── Loading ──────────────────────────────────────────────────────────────────
-
   if (loading) {
     return (
-      <div className="h-screen bg-[#0d1117] flex flex-col">
+      // h-full fills the parent <main> which is now h-full in the layout
+      <div className="h-full bg-[#0d1117] flex flex-col">
         <TopBar problem={null} language={language} onLanguageChange={setLanguage} languages={languages} isRunning={false} onRun={() => {}} onSubmit={() => {}} slug={slug} />
         <div className="flex-1 flex items-center justify-center">
           <div className="flex flex-col items-center gap-3">
-            <div className="w-8 h-8 border-2 border-white/10 border-t-[#828fff] rounded-full animate-spin" />
+            <div className="w-8 h-8 border-2 border-white/10 border-t-[#00d4ff] rounded-full animate-spin" />
             <p className="text-xs text-white/30">Loading problem…</p>
           </div>
         </div>
@@ -186,9 +227,9 @@ export default function ProblemPage() {
 
   if (!problem) {
     return (
-      <div className="h-screen bg-[#0d1117] flex flex-col items-center justify-center gap-3">
+      <div className="h-full bg-[#0d1117] flex flex-col items-center justify-center gap-3">
         <p className="text-sm text-white/40">Problem not found.</p>
-        <Link href="/problems" className="text-xs text-[#828fff] hover:underline">← Back to problems</Link>
+        <Link href="/problems" className="text-xs text-[#00d4ff] hover:underline">← Back to problems</Link>
       </div>
     );
   }
@@ -197,36 +238,50 @@ export default function ProblemPage() {
 
   if (isMobile) {
     return (
-      <div className="h-screen bg-[#0d1117] flex flex-col overflow-hidden">
+      <div className="h-full bg-[#0d1117] flex flex-col overflow-hidden">
         <TopBar problem={problem} language={language} onLanguageChange={setLanguage} languages={languages} isRunning={isRunning} onRun={handleRun} onSubmit={handleSubmit} slug={slug} onAiChatClick={() => setAiChatOpen(true)} />
 
-        <div className="flex border-b border-white/[0.07] shrink-0">
+        {/* Mobile tab switcher */}
+        <div className="flex border-b border-white/[0.07] bg-[#161b22] shrink-0">
           {(['problem', 'editor'] as const).map((v) => (
             <button
               key={v}
               onClick={() => setMobileView(v)}
               className={cn(
-                'flex-1 py-2.5 text-[11px] font-semibold transition-colors capitalize',
-                mobileView === v ? 'text-white border-b-2 border-[#828fff]' : 'text-white/35'
+                'flex-1 py-2.5 text-[11px] font-semibold transition-colors capitalize flex items-center justify-center gap-1.5',
+                mobileView === v
+                  ? 'text-white border-b-2 border-[#00d4ff] bg-[#00d4ff]/5'
+                  : 'text-white/35 hover:text-white/60'
               )}
             >
-              {v === 'problem' ? <><LayoutPanelLeft className="w-3 h-3 inline mr-1" />Problem</> : <><Code2 className="w-3 h-3 inline mr-1" />Solution</>}
+              {v === 'problem'
+                ? <><LayoutPanelLeft className="w-3 h-3" />Problem</>
+                : <><Code2 className="w-3 h-3" />Solution</>}
             </button>
           ))}
         </div>
 
         {mobileView === 'problem' ? (
-          <div className="flex-1 overflow-y-auto">
+          /* Problem panel — independent scroll */
+          <div className="flex-1 overflow-hidden flex flex-col">
             <LeftPanel problem={problem} leftTab={leftTab} setLeftTab={setLeftTab} slug={slug} />
           </div>
         ) : (
+          /* Editor panel */
           <div className="flex-1 flex flex-col overflow-hidden">
             <EditorToolbar language={language} onLanguageChange={setLanguage} />
             <div className="flex-1 overflow-hidden">
-              <CodeEditor value={code} onChange={setCode} language={language} onRun={handleRun} onSubmit={handleSubmit} problemSlug={slug} height="100%" />
+              <CodeEditor
+                value={code} onChange={setCode} language={language}
+                onRun={handleRun} onSubmit={handleSubmit} problemSlug={slug}
+                height="100%"
+              />
             </div>
-            <CustomInput value={customInput} onChange={setCustomInput} isOpen={customInputOpen} onToggle={() => setCustomInputOpen(!customInputOpen)} />
-            <div className="h-48 shrink-0">
+            <CustomInput
+              value={customInput} onChange={setCustomInput}
+              isOpen={customInputOpen} onToggle={() => setCustomInputOpen(!customInputOpen)}
+            />
+            <div className="h-48 shrink-0 border-t border-white/[0.07]">
               <OutputPanel result={result} testResults={testResults} isRunning={isRunning} />
             </div>
           </div>
@@ -240,42 +295,81 @@ export default function ProblemPage() {
   // ── Desktop layout ───────────────────────────────────────────────────────────
 
   return (
-    <div className="h-screen bg-[#0d1117] flex flex-col overflow-hidden">
-      <TopBar problem={problem} language={language} onLanguageChange={setLanguage} languages={languages} isRunning={isRunning} onRun={handleRun} onSubmit={handleSubmit} slug={slug} onAiChatClick={() => setAiChatOpen(true)} />
+    // h-full fills the parent <main> (which is h-full in layout.tsx)
+    // overflow-hidden prevents any child from causing layout-level scrollbars
+    <div className="h-full bg-[#0d1117] flex flex-col overflow-hidden">
+      <TopBar
+        problem={problem} language={language} onLanguageChange={setLanguage}
+        languages={languages} isRunning={isRunning} onRun={handleRun}
+        onSubmit={handleSubmit} slug={slug} onAiChatClick={() => setAiChatOpen(true)}
+      />
 
-      <div className="flex-1 overflow-hidden">
-        <PanelGroup orientation="horizontal" className="h-full">
-          <Panel defaultSize={38} minSize={22} maxSize={55}>
-            <div className="h-full bg-[#0d1117] border-r border-white/[0.06] overflow-hidden flex flex-col">
+      {/* Main workspace — fills all remaining height */}
+      <div className="flex-1 overflow-hidden min-h-0">
+        <PanelGroup
+          orientation="horizontal"
+          className="h-full"
+          id="problem-workspace"
+          defaultLayout={{ "problem-left": 38, "problem-right": 62 }}
+        >
+
+          {/* ── Left: Problem statement ──────────────────────────────────── */}
+          <Panel id="problem-left" defaultSize={38} minSize={24} maxSize={60}>
+            <div className="h-full overflow-hidden flex flex-col border-r border-white/[0.06] bg-[#0d1117]">
               <LeftPanel problem={problem} leftTab={leftTab} setLeftTab={setLeftTab} slug={slug} />
             </div>
           </Panel>
 
-          <PanelResizeHandle className="w-[3px] bg-white/[0.03] hover:bg-[#828fff]/40 active:bg-[#828fff]/60 transition-colors cursor-col-resize" />
+          <PanelResizeHandle className="w-[3px] bg-white/[0.03] hover:bg-[#00d4ff]/40 active:bg-[#00d4ff]/60 transition-colors cursor-col-resize shrink-0" />
 
-          <Panel defaultSize={62} minSize={35}>
-            <PanelGroup orientation="vertical" className="h-full">
-              <Panel defaultSize={62} minSize={30}>
-                <div className="h-full flex flex-col overflow-hidden">
+          {/* ── Right: Editor + Output ───────────────────────────────────── */}
+          <Panel id="problem-right" defaultSize={62} minSize={30}>
+            <PanelGroup
+              orientation="vertical"
+              className="h-full"
+              id="problem-editor-stack"
+              defaultLayout={{ "problem-editor": 65, "problem-output": 35 }}
+            >
+
+              {/* Code editor pane */}
+              <Panel id="problem-editor" defaultSize={65} minSize={28}>
+                <div className="h-full flex flex-col overflow-hidden bg-[#0d1117]">
                   <EditorToolbar language={language} onLanguageChange={setLanguage} />
-                  <div className="flex-1 overflow-hidden">
-                    <CodeEditor value={code} onChange={setCode} language={language} onRun={handleRun} onSubmit={handleSubmit} problemSlug={slug} height="100%" />
+                  {/* flex-1 min-h-0 is crucial — without min-h-0 flex children ignore overflow */}
+                  <div className="flex-1 min-h-0 overflow-hidden">
+                    <CodeEditor
+                      value={code} onChange={setCode} language={language}
+                      onRun={handleRun} onSubmit={handleSubmit} problemSlug={slug}
+                      height="100%"
+                    />
                   </div>
-                  <CustomInput value={customInput} onChange={setCustomInput} isOpen={customInputOpen} onToggle={() => setCustomInputOpen(!customInputOpen)} />
+                  <CustomInput
+                    value={customInput} onChange={setCustomInput}
+                    isOpen={customInputOpen} onToggle={() => setCustomInputOpen(!customInputOpen)}
+                  />
                 </div>
               </Panel>
 
-              <PanelResizeHandle className="h-[3px] bg-white/[0.03] hover:bg-[#828fff]/40 active:bg-[#828fff]/60 transition-colors cursor-row-resize" />
+              <PanelResizeHandle className="h-[3px] bg-white/[0.03] hover:bg-[#00d4ff]/40 active:bg-[#00d4ff]/60 transition-colors cursor-row-resize shrink-0" />
 
-              <Panel defaultSize={38} minSize={15}>
-                <OutputPanel result={result} testResults={testResults} isRunning={isRunning} />
+              {/* Output / test cases pane */}
+              <Panel id="problem-output" defaultSize={35} minSize={14}>
+                <div className="h-full overflow-hidden">
+                  <OutputPanel result={result} testResults={testResults} isRunning={isRunning} />
+                </div>
               </Panel>
+
             </PanelGroup>
           </Panel>
+
         </PanelGroup>
       </div>
 
-      <AiChatDrawer isOpen={aiChatOpen} onClose={() => setAiChatOpen(false)} currentCode={code} currentLanguage={language} problemTitle={problem.title} problemDescription={problem.description} />
+      <AiChatDrawer
+        isOpen={aiChatOpen} onClose={() => setAiChatOpen(false)}
+        currentCode={code} currentLanguage={language}
+        problemTitle={problem.title} problemDescription={problem.description}
+      />
     </div>
   );
 }
@@ -326,7 +420,7 @@ function TopBar({
         {onAiChatClick && (
           <button
             onClick={onAiChatClick}
-            className="flex items-center gap-1.5 h-8 px-3 rounded-xl text-xs font-semibold bg-[#828fff]/12 hover:bg-[#828fff]/20 border border-[#828fff]/25 hover:border-[#828fff]/45 text-[#828fff] transition-all"
+            className="flex items-center gap-1.5 h-8 px-3 rounded-xl text-xs font-semibold bg-[#00d4ff]/12 hover:bg-[#00d4ff]/20 border border-[#00d4ff]/25 hover:border-[#00d4ff]/45 text-[#00d4ff] transition-all"
           >
             <Sparkles className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Ask AI</span>
@@ -350,7 +444,7 @@ function TopBar({
         <button
           onClick={onSubmit}
           disabled={isRunning}
-          className="flex items-center gap-1.5 h-8 px-3.5 rounded-xl text-xs font-semibold bg-[#828fff] hover:bg-[#6a74e8] disabled:opacity-40 text-white transition-colors shadow-md shadow-[#828fff]/20"
+          className="flex items-center gap-1.5 h-8 px-3.5 rounded-xl text-xs font-semibold bg-[#00d4ff] hover:bg-[#6a74e8] disabled:opacity-40 text-white transition-colors shadow-md shadow-[#00d4ff]/20"
         >
           {isRunning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3 h-3" />}
           Submit
@@ -380,8 +474,8 @@ function LeftPanel({
 
   return (
     <>
-      {/* Tab bar */}
-      <div className="flex items-center border-b border-white/[0.07] px-3 shrink-0 h-10 gap-1">
+      {/* Tab bar — fixed height, never shrinks */}
+      <div className="flex items-center border-b border-white/[0.07] bg-[#0d1117] px-3 shrink-0 h-10 gap-0.5">
         {TABS.map((tab) => (
           <button
             key={tab.id}
@@ -389,7 +483,7 @@ function LeftPanel({
             className={cn(
               'px-3 h-full text-[11px] font-semibold border-b-2 transition-colors',
               leftTab === tab.id
-                ? 'border-[#828fff] text-white'
+                ? 'border-[#00d4ff] text-white'
                 : 'border-transparent text-white/35 hover:text-white/65'
             )}
           >
@@ -398,10 +492,10 @@ function LeftPanel({
         ))}
       </div>
 
-      {/* Tab content */}
-      <div className="flex-1 overflow-y-auto">
+      {/* Scrollable content — min-h-0 is required for flex children to respect overflow */}
+      <div className="flex-1 min-h-0 overflow-y-auto">
         {leftTab === 'description' && (
-          <div className="p-5 pb-8">
+          <div className="px-5 py-4 pb-8">
             <ProblemStatement problem={problem} />
           </div>
         )}
@@ -440,7 +534,7 @@ function HintsPanel({ problem }: { problem: Problem }) {
             className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-white/[0.03] transition-colors"
           >
             <span className="text-[12px] font-semibold text-white/60">Hint {i + 1}</span>
-            <span className="text-[10px] text-[#828fff] font-medium">
+            <span className="text-[10px] text-[#00d4ff] font-medium">
               {revealed.includes(i) ? 'Hide ↑' : 'Reveal ↓'}
             </span>
           </button>

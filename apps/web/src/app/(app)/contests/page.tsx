@@ -69,9 +69,9 @@ function ContestCard({ contest, onJoin }: { contest: Contest; onJoin: (id: strin
         <span className={cn(
           'text-xs font-medium rounded-full px-3 py-0.5 ml-3 shrink-0',
           isActive
-            ? 'bg-[rgba(39,166,68,0.15)] text-[#27a644] animate-pulse'
+            ? 'bg-[rgba(16,185,129,0.15)] text-[#10b981] animate-pulse'
             : isUpcoming
-            ? 'bg-[rgba(94,106,210,0.15)] text-[#828fff]'
+            ? 'bg-[rgba(0,212,255,0.15)] text-[#00d4ff]'
             : 'bg-white/8 text-white/40'
         )}>
           {isActive ? 'Live' : isUpcoming ? 'Upcoming' : 'Ended'}
@@ -99,10 +99,10 @@ function ContestCard({ contest, onJoin }: { contest: Contest; onJoin: (id: strin
       {/* Countdown timer */}
       {(isActive || isUpcoming) && (
         <div className="mb-4 bg-surface2 rounded-lg px-3 py-2 flex items-center justify-between">
-          <span className="text-[10px] text-white/40 uppercase tracking-wider">
+          <span className="text-[10px] text-[#8a9bb5] uppercase tracking-wider">
             {isActive ? 'Ends in' : 'Starts in'}
           </span>
-          <span className={cn('font-mono text-sm font-semibold', isActive ? 'text-[#27a644]' : 'text-[#828fff]')}>
+          <span className={cn('font-mono text-sm font-semibold', isActive ? 'text-[#10b981]' : 'text-[#00d4ff]')}>
             {countdown}
           </span>
         </div>
@@ -233,7 +233,7 @@ export default function ContestsPage() {
       {toast && (
         <div className={cn(
           'fixed bottom-6 left-1/2 -translate-x-1/2 px-5 py-3 rounded-xl text-sm font-medium shadow-xl z-50',
-          toast.ok ? 'bg-[#27a644] text-white' : 'bg-[#e5534b] text-white'
+          toast.ok ? 'bg-[#10b981] text-white' : 'bg-[#e5534b] text-white'
         )}>
           {toast.msg}
         </div>

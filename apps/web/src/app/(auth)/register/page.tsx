@@ -32,7 +32,7 @@ export default function RegisterPage() {
         <div style={{
           width: 600,
           height: 600,
-          background: 'radial-gradient(circle, rgba(94,106,210,0.12) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(0,212,255,0.12) 0%, transparent 70%)',
           borderRadius: '50%',
         }} />
       </div>
@@ -49,19 +49,19 @@ export default function RegisterPage() {
         {/* Card */}
         <div className="lg-strong p-8">
           <h1 className="text-2xl font-bold tracking-[-0.04em] text-white mb-1">Create your account</h1>
-          <p className="text-sm text-white/45 mb-6">Free forever — no credit card required</p>
+          <p className="text-sm text-[#8a9bb5] mb-6">Free forever — no credit card required</p>
 
           {error && (
             <div className="mb-5 px-4 py-3 rounded-[11px] text-sm" style={{
-              background: 'rgba(207,45,86,0.12)',
-              border: '1px solid rgba(207,45,86,0.25)',
-              color: '#cf2d56',
+              background: 'rgba(239,68,68,0.12)',
+              border: '1px solid rgba(239,68,68,0.25)',
+              color: '#ef4444',
             }}>{error}</div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-[11px] font-semibold text-white/40 uppercase tracking-[0.4px] mb-1.5">Username</label>
+              <label className="block text-[11px] font-semibold text-[#8a9bb5] uppercase tracking-[0.4px] mb-1.5">Username</label>
               <input
                 type="text"
                 value={username}
@@ -74,7 +74,7 @@ export default function RegisterPage() {
               />
             </div>
             <div>
-              <label className="block text-[11px] font-semibold text-white/40 uppercase tracking-[0.4px] mb-1.5">Email</label>
+              <label className="block text-[11px] font-semibold text-[#8a9bb5] uppercase tracking-[0.4px] mb-1.5">Email</label>
               <input
                 type="email"
                 value={email}
@@ -85,7 +85,7 @@ export default function RegisterPage() {
               />
             </div>
             <div>
-              <label className="block text-[11px] font-semibold text-white/40 uppercase tracking-[0.4px] mb-1.5">Password</label>
+              <label className="block text-[11px] font-semibold text-[#8a9bb5] uppercase tracking-[0.4px] mb-1.5">Password</label>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -116,9 +116,9 @@ export default function RegisterPage() {
           </form>
         </div>
 
-        <p className="text-center text-sm text-white/35 mt-5">
+        <p className="text-center text-sm text-[#4a5568] mt-5">
           Already have an account?{' '}
-          <Link href="/login" className="text-[#828fff] hover:underline font-medium">Sign in</Link>
+          <Link href="/login" className="text-[#00d4ff] hover:underline font-medium">Sign in</Link>
         </p>
       </div>
     </div>

@@ -28,13 +28,13 @@ const LANGUAGES = Object.entries(LANGUAGE_NAMES).map(([id, name]) => ({
 }));
 
 const DIFFICULTY_COLOR: Record<string, string> = {
-  easy:   'bg-[#27a644]',
-  medium: 'bg-[#f5a623]',
-  hard:   'bg-[#cf2d56]',
+  easy:   'bg-[#10b981]',
+  medium: 'bg-[#f59e0b]',
+  hard:   'bg-[#ef4444]',
 };
 
 // Deterministic color from userId
-const CURSOR_COLORS = ['#828fff','#4ade80','#f59e0b','#f472b6','#22d3ee','#a78bfa','#fb923c','#34d399'];
+const CURSOR_COLORS = ['#00d4ff','#4ade80','#f59e0b','#f472b6','#22d3ee','#a78bfa','#fb923c','#34d399'];
 function userColor(uid: string) {
   let h = 0;
   for (let i = 0; i < uid.length; i++) h = uid.charCodeAt(i) + ((h << 5) - h);
@@ -72,7 +72,7 @@ export default function RoomPage() {
   const [editorHeight, setEditorHeight]         = useState(400);
   const editorContainerRef = useRef<HTMLDivElement>(null);
 
-  const myColor = user ? userColor(user.id) : '#828fff';
+  const myColor = user ? userColor(user.id) : '#00d4ff';
 
   // ── Phase 2: WebSocket hook ───────────────────────────────────────────────
   const {
@@ -357,7 +357,7 @@ export default function RoomPage() {
                             onClick={() => handleSelectProblem(p)}
                             className={`w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors ${
                               isActive
-                                ? 'bg-[rgba(94,106,210,0.12)] text-ink'
+                                ? 'bg-[rgba(0,212,255,0.12)] text-ink'
                                 : 'text-ink-muted hover:bg-surface2 hover:text-ink'
                             }`}
                           >
@@ -418,7 +418,7 @@ export default function RoomPage() {
                       <button
                         key={lid}
                         onClick={() => handleLanguageChange(lid)}
-                        className={`w-full text-left px-3 py-2 text-xs transition-colors hover:bg-white/5 ${language === lid ? 'text-[#828fff]' : 'text-white/60'}`}
+                        className={`w-full text-left px-3 py-2 text-xs transition-colors hover:bg-white/5 ${language === lid ? 'text-[#00d4ff]' : 'text-white/60'}`}
                       >
                         {name}
                       </button>
@@ -445,13 +445,13 @@ export default function RoomPage() {
                 disabled={isRunning || !problem}
                 className="flex items-center gap-1.5 text-xs bg-[#0d1117] border border-white/[0.08] text-white/60 px-3 py-1 rounded-md hover:text-white hover:border-white/20 transition-colors disabled:opacity-40"
               >
-                {isRunning ? <Loader2 className="w-3 h-3 animate-spin" /> : <Play className="w-3 h-3 text-[#27a644]" />}
+                {isRunning ? <Loader2 className="w-3 h-3 animate-spin" /> : <Play className="w-3 h-3 text-[#10b981]" />}
                 Run
               </button>
               <button
                 onClick={handleSubmit}
                 disabled={isRunning || !problem}
-                className="flex items-center gap-1.5 text-xs bg-[#828fff] text-white px-3 py-1 rounded-md hover:bg-[#9da6ff] transition-colors disabled:opacity-40"
+                className="flex items-center gap-1.5 text-xs bg-[#00d4ff] text-white px-3 py-1 rounded-md hover:bg-[#9da6ff] transition-colors disabled:opacity-40"
               >
                 <Send className="w-3 h-3" />
                 Submit

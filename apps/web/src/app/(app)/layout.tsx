@@ -5,9 +5,14 @@ import { ThemeProvider } from '@/components/ThemeProvider';
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider>
-      <div className="flex min-h-screen bg-background">
+      {/* h-screen + overflow-hidden here is critical — it lets full-workspace
+          pages (editor, rooms) be exactly viewport-height with independent
+          panel scrolling. Non-workspace pages overflow naturally because
+          they don't set h-screen themselves. */}
+      <div className="flex h-screen overflow-hidden bg-background">
         <Sidebar />
-        <main className="flex-1 ml-60 min-h-screen">
+        {/* overflow-y-auto here so normal pages (dashboard, leaderboard) still scroll */}
+        <main className="flex-1 ml-60 h-full overflow-y-auto">
           {children}
         </main>
       </div>

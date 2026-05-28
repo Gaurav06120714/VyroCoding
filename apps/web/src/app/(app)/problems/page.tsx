@@ -20,6 +20,12 @@ interface ProblemRow {
   solved?: boolean;
 }
 
+interface DifficultyCounts {
+  easy: number;
+  medium: number;
+  hard: number;
+}
+
 const DIFFICULTY_FILTERS: { value: Difficulty; label: string }[] = [
   { value: 'all',    label: 'All'    },
   { value: 'easy',   label: 'Easy'   },
@@ -53,10 +59,8 @@ function SkeletonRow() {
 
 // ── Stats bar ──────────────────────────────────────────────────────────────────
 
-function StatsBar({ problems }: { problems: ProblemRow[] }) {
-  const easy   = problems.filter((p) => p.difficulty === 'easy').length;
-  const medium = problems.filter((p) => p.difficulty === 'medium').length;
-  const hard   = problems.filter((p) => p.difficulty === 'hard').length;
+function StatsBar({ counts }: { counts: DifficultyCounts }) {
+  const { easy, medium, hard } = counts;
 
   return (
     <div className="flex items-center gap-5 text-xs text-white/40">
@@ -79,12 +83,23 @@ function StatsBar({ problems }: { problems: ProblemRow[] }) {
 // ── Main page ──────────────────────────────────────────────────────────────────
 
 export default function ProblemsPage() {
-  const [problems, setProblems]     = useState<ProblemRow[]>([]);
-  const [total, setTotal]           = useState(0);
-  const [difficulty, setDifficulty] = useState<Difficulty>('all');
-  const [search, setSearch]         = useState('');
-  const [page, setPage]             = useState(1);
-  const [loading, setLoading]       = useState(true);
+  const [problems, setProblems]         = useState<ProblemRow[]>([]);
+  const [total, setTotal]               = useState(0);
+  const [difficulty, setDifficulty]     = useState<Difficulty>('all');
+  const [search, setSearch]             = useState('');
+  const [page, setPage]                 = useState(1);
+  const [loading, setLoading]           = useState(true);
+  const [difficultyCounts, setDifficultyCounts] = useState<DifficultyCounts>({ easy: 0, medium: 0, hard: 0 });
+
+  useEffect(() => {
+    Promise.all([
+      problemsApi.list({ difficulty: 'easy',   pageSize: 1 }),
+      problemsApi.list({ difficulty: 'medium', pageSize: 1 }),
+      problemsApi.list({ difficulty: 'hard',   pageSize: 1 }),
+    ]).then(([e, m, h]) => {
+      setDifficultyCounts({ easy: e.data.total, medium: m.data.total, hard: h.data.total });
+    }).catch(console.error);
+  }, []);
 
   const fetchProblems = useCallback(async () => {
     setLoading(true);
@@ -114,7 +129,7 @@ export default function ProblemsPage() {
   const totalPages = Math.ceil(total / 50);
 
   return (
-    <div className="min-h-screen bg-[#0d1117]">
+    <div className="min-h-screen bg-canvas">
       <Navbar />
 
       <div className="max-w-6xl mx-auto px-6 py-10">
@@ -125,7 +140,7 @@ export default function ProblemsPage() {
             <h1 className="text-3xl font-bold tracking-tight text-white mb-1">Problems</h1>
             <p className="text-sm text-white/40">{total > 0 ? `${total} problems` : 'Loading…'}</p>
           </div>
-          {!loading && <StatsBar problems={problems} />}
+          {!loading && <StatsBar counts={difficultyCounts} />}
         </div>
 
         {/* ── Filters ── */}
@@ -138,7 +153,7 @@ export default function ProblemsPage() {
               placeholder="Search by title or tag…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full h-9 pl-9 pr-4 bg-white/[0.04] border border-white/[0.08] hover:border-white/[0.14] focus:border-[#828fff]/50 focus:outline-none rounded-xl text-sm text-white placeholder:text-white/20 transition-colors"
+              className="w-full h-9 pl-9 pr-4 bg-white/[0.04] border border-white/[0.08] hover:border-white/[0.14] focus:border-[#00d4ff]/50 focus:outline-none rounded-xl text-sm text-white placeholder:text-white/20 transition-colors"
             />
           </div>
 
@@ -151,7 +166,7 @@ export default function ProblemsPage() {
                 className={cn(
                   'h-9 px-4 rounded-xl text-sm font-medium transition-all border',
                   difficulty === value
-                    ? 'bg-[#828fff]/15 border-[#828fff]/35 text-white font-semibold'
+                    ? 'bg-[#00d4ff]/15 border-[#00d4ff]/35 text-white font-semibold'
                     : 'bg-transparent border-white/[0.08] text-white/40 hover:text-white/70 hover:border-white/20'
                 )}
               >
@@ -162,7 +177,7 @@ export default function ProblemsPage() {
         </div>
 
         {/* ── Table ── */}
-        <div className="rounded-2xl border border-white/[0.07] overflow-hidden bg-[#161b22]/50">
+        <div className="rounded-2xl border border-white/[0.07] overflow-hidden bg-surface1/80">
 
           {/* Header row */}
           <div className="grid grid-cols-[40px_32px_1fr_90px_auto_70px] items-center gap-4 px-6 py-3 border-b border-white/[0.07] bg-white/[0.02]">
@@ -182,7 +197,7 @@ export default function ProblemsPage() {
               <Zap className="w-8 h-8 text-white/10 mx-auto mb-3" />
               <p className="text-sm text-white/30">No problems found.</p>
               {search && (
-                <button onClick={() => setSearch('')} className="mt-2 text-xs text-[#828fff] hover:underline">
+                <button onClick={() => setSearch('')} className="mt-2 text-xs text-[#00d4ff] hover:underline">
                   Clear search
                 </button>
               )}

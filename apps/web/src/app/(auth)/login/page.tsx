@@ -31,7 +31,7 @@ export default function LoginPage() {
         <div style={{
           width: 600,
           height: 600,
-          background: 'radial-gradient(circle, rgba(94,106,210,0.12) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(0,212,255,0.10) 0%, transparent 70%)',
           borderRadius: '50%',
         }} />
       </div>
@@ -48,19 +48,19 @@ export default function LoginPage() {
         {/* Card */}
         <div className="lg-strong p-8">
           <h1 className="text-2xl font-bold tracking-[-0.04em] text-white mb-1">Welcome back</h1>
-          <p className="text-sm text-white/45 mb-6">Sign in to continue coding</p>
+          <p className="text-sm text-[#8a9bb5] mb-6">Sign in to continue coding</p>
 
           {error && (
             <div className="mb-5 px-4 py-3 rounded-[11px] text-sm" style={{
-              background: 'rgba(207,45,86,0.12)',
-              border: '1px solid rgba(207,45,86,0.25)',
-              color: '#cf2d56',
+              background: 'rgba(239,68,68,0.12)',
+              border: '1px solid rgba(239,68,68,0.25)',
+              color: '#ef4444',
             }}>{error}</div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-[11px] font-semibold text-white/40 uppercase tracking-[0.4px] mb-1.5">Email</label>
+              <label className="block text-[11px] font-semibold text-[#8a9bb5] uppercase tracking-[0.4px] mb-1.5">Email</label>
               <input
                 type="email"
                 value={email}
@@ -72,8 +72,8 @@ export default function LoginPage() {
             </div>
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-[11px] font-semibold text-white/40 uppercase tracking-[0.4px]">Password</label>
-                <Link href="/forgot-password" className="text-[10px] text-white/35 hover:text-[#828fff] transition-colors">Forgot password?</Link>
+                <label className="block text-[11px] font-semibold text-[#8a9bb5] uppercase tracking-[0.4px]">Password</label>
+                <Link href="/forgot-password" className="text-[10px] text-[#4a5568] hover:text-[#00d4ff] transition-colors">Forgot password?</Link>
               </div>
               <div className="relative">
                 <input
@@ -104,9 +104,9 @@ export default function LoginPage() {
           </form>
         </div>
 
-        <p className="text-center text-sm text-white/35 mt-5">
+        <p className="text-center text-sm text-[#4a5568] mt-5">
           {"Don't have an account? "}
-          <Link href="/register" className="text-[#828fff] hover:underline font-medium">Create one</Link>
+          <Link href="/register" className="text-[#00d4ff] hover:underline font-medium">Create one</Link>
         </p>
       </div>
     </div>

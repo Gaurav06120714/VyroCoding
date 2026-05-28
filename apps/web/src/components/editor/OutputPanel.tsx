@@ -21,7 +21,7 @@ interface OutputPanelProps {
 function getStatusConfig(status?: SubmissionStatus) {
   switch (status) {
     case SubmissionStatus.Accepted:
-      return { label: 'Accepted', color: 'text-[#27a644]', bg: 'bg-[#27a644]/10 border-[#27a644]/20', icon: <CheckCircle2 className="w-4 h-4" /> };
+      return { label: 'Accepted', color: 'text-[#10b981]', bg: 'bg-[#10b981]/10 border-[#10b981]/20', icon: <CheckCircle2 className="w-4 h-4" /> };
     case SubmissionStatus.WrongAnswer:
       return { label: 'Wrong Answer', color: 'text-[#e5534b]', bg: 'bg-[#e5534b]/10 border-[#e5534b]/20', icon: <XCircle className="w-4 h-4" /> };
     case SubmissionStatus.TimeLimitExceeded:
@@ -45,8 +45,8 @@ function RunningView() {
   return (
     <div className="flex flex-col items-center justify-center h-full gap-3 text-white/40">
       <div className="relative">
-        <div className="w-10 h-10 border-2 border-white/10 border-t-[#828fff] rounded-full animate-spin" />
-        <Terminal className="w-4 h-4 absolute inset-0 m-auto text-[#828fff]" />
+        <div className="w-10 h-10 border-2 border-white/10 border-t-[#00d4ff] rounded-full animate-spin" />
+        <Terminal className="w-4 h-4 absolute inset-0 m-auto text-[#00d4ff]" />
       </div>
       <div className="text-center">
         <p className="text-sm font-medium text-white/60">Executing…</p>
@@ -145,11 +145,11 @@ function TestCasesView({ testResults }: { testResults: TestCaseResult[] }) {
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Summary bar */}
-      <div className={`flex items-center gap-2 px-4 py-2 border-b shrink-0 ${allPassed ? 'bg-[#27a644]/10 border-[#27a644]/20' : 'bg-[#e5534b]/10 border-[#e5534b]/20'}`}>
+      <div className={`flex items-center gap-2 px-4 py-2 border-b shrink-0 ${allPassed ? 'bg-[#10b981]/10 border-[#10b981]/20' : 'bg-[#e5534b]/10 border-[#e5534b]/20'}`}>
         {allPassed
-          ? <CheckCircle2 className="w-4 h-4 text-[#27a644]" />
+          ? <CheckCircle2 className="w-4 h-4 text-[#10b981]" />
           : <XCircle className="w-4 h-4 text-[#e5534b]" />}
-        <span className={`text-sm font-semibold ${allPassed ? 'text-[#27a644]' : 'text-[#e5534b]'}`}>
+        <span className={`text-sm font-semibold ${allPassed ? 'text-[#10b981]' : 'text-[#e5534b]'}`}>
           {passed}/{total} test cases passed
         </span>
       </div>
@@ -161,7 +161,7 @@ function TestCasesView({ testResults }: { testResults: TestCaseResult[] }) {
             key={i}
             className={`rounded-lg border overflow-hidden ${
               tc.passed
-                ? 'border-[#27a644]/20 bg-[#27a644]/5'
+                ? 'border-[#10b981]/20 bg-[#10b981]/5'
                 : 'border-[#e5534b]/20 bg-[#e5534b]/5'
             }`}
           >
@@ -170,9 +170,9 @@ function TestCasesView({ testResults }: { testResults: TestCaseResult[] }) {
               onClick={() => setExpanded(expanded === i ? null : i)}
             >
               {tc.passed
-                ? <CheckCircle2 className="w-3.5 h-3.5 text-[#27a644] shrink-0" />
+                ? <CheckCircle2 className="w-3.5 h-3.5 text-[#10b981] shrink-0" />
                 : <XCircle className="w-3.5 h-3.5 text-[#e5534b] shrink-0" />}
-              <span className={`text-xs font-semibold ${tc.passed ? 'text-[#27a644]' : 'text-[#e5534b]'}`}>
+              <span className={`text-xs font-semibold ${tc.passed ? 'text-[#10b981]' : 'text-[#e5534b]'}`}>
                 Case {i + 1}
               </span>
               {tc.timeMs !== null && (
@@ -242,7 +242,7 @@ export function OutputPanel({ result, testResults, isRunning, problemSlug: _prob
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-1.5 px-3 h-full text-[11px] font-medium border-b-2 transition-colors ${
                 isActive
-                  ? 'border-[#828fff] text-white'
+                  ? 'border-[#00d4ff] text-white'
                   : 'border-transparent text-white/40 hover:text-white/70'
               }`}
             >
@@ -251,7 +251,7 @@ export function OutputPanel({ result, testResults, isRunning, problemSlug: _prob
               {tab.id === 'testcases' && hasTestResults && (
                 <span className={`ml-1 text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${
                   testResults.every((t) => t.passed)
-                    ? 'bg-[#27a644]/20 text-[#27a644]'
+                    ? 'bg-[#10b981]/20 text-[#10b981]'
                     : 'bg-[#e5534b]/20 text-[#e5534b]'
                 }`}>
                   {testResults.filter((t) => t.passed).length}/{testResults.length}

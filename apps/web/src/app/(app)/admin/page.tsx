@@ -44,11 +44,11 @@ interface Stats {
 type Tab = 'problems' | 'rooms' | 'submissions';
 
 const STATUS_COLORS: Record<string, string> = {
-  accepted: '#27a644',
-  wrong_answer: '#cf2d56',
-  runtime_error: '#cf2d56',
-  compile_error: '#f5a623',
-  time_limit_exceeded: '#f5a623',
+  accepted: '#10b981',
+  wrong_answer: '#ef4444',
+  runtime_error: '#ef4444',
+  compile_error: '#f59e0b',
+  time_limit_exceeded: '#f59e0b',
 };
 
 function ProblemModal({

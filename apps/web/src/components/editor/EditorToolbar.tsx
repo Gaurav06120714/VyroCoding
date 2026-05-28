@@ -69,7 +69,7 @@ export function EditorToolbar({ language, onLanguageChange }: EditorToolbarProps
                     setShowLangMenu(false);
                   }}
                   className={`w-full text-left px-3 py-1.5 text-xs transition-colors hover:bg-white/[0.06] ${
-                    language === lang.id ? 'text-[#828fff]' : 'text-white/60'
+                    language === lang.id ? 'text-[#00d4ff]' : 'text-white/60'
                   }`}
                 >
                   {lang.name}
@@ -109,7 +109,7 @@ export function EditorToolbar({ language, onLanguageChange }: EditorToolbarProps
             onClick={() => setTabSize(2)}
             className={`px-1.5 h-5 text-[10px] rounded transition-colors ${
               tabSize === 2
-                ? 'bg-[#828fff]/20 text-[#828fff]'
+                ? 'bg-[#00d4ff]/20 text-[#00d4ff]'
                 : 'text-white/40 hover:text-white/70 hover:bg-white/[0.06]'
             }`}
             title="Tab size 2"
@@ -120,7 +120,7 @@ export function EditorToolbar({ language, onLanguageChange }: EditorToolbarProps
             onClick={() => setTabSize(4)}
             className={`px-1.5 h-5 text-[10px] rounded transition-colors ${
               tabSize === 4
-                ? 'bg-[#828fff]/20 text-[#828fff]'
+                ? 'bg-[#00d4ff]/20 text-[#00d4ff]'
                 : 'text-white/40 hover:text-white/70 hover:bg-white/[0.06]'
             }`}
             title="Tab size 4"
@@ -136,7 +136,7 @@ export function EditorToolbar({ language, onLanguageChange }: EditorToolbarProps
           onClick={toggleWordWrap}
           className={`w-6 h-6 flex items-center justify-center rounded transition-colors ${
             wordWrap
-              ? 'bg-[#828fff]/20 text-[#828fff]'
+              ? 'bg-[#00d4ff]/20 text-[#00d4ff]'
               : 'text-white/40 hover:text-white/70 hover:bg-white/[0.06]'
           }`}
           title={wordWrap ? 'Word wrap on' : 'Word wrap off'}
@@ -149,7 +149,7 @@ export function EditorToolbar({ language, onLanguageChange }: EditorToolbarProps
           onClick={toggleMinimap}
           className={`w-6 h-6 flex items-center justify-center rounded transition-colors ${
             minimap
-              ? 'bg-[#828fff]/20 text-[#828fff]'
+              ? 'bg-[#00d4ff]/20 text-[#00d4ff]'
               : 'text-white/40 hover:text-white/70 hover:bg-white/[0.06]'
           }`}
           title={minimap ? 'Minimap on' : 'Minimap off'}

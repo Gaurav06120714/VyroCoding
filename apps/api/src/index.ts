@@ -17,6 +17,7 @@ import { usersRoutes }        from './routes/users.routes.js';
 import { adminRoutes }        from './routes/admin.routes.js';
 import { languagesRoutes }    from './routes/languages.routes.js';
 import { aiRoutes }           from './routes/ai.routes.js';
+import { bootOllamaSetup }    from './services/ollama.service.js';
 import { getRedis }           from './services/redis.service.js';
 import { ipRateLimit, userRateLimit, logSecurityEvent } from './plugins/rate-limit.js';
 
@@ -152,6 +153,9 @@ async function bootstrap(): Promise<void> {
   // ── Start ─────────────────────────────────────────────────────────────────
   await fastify.listen({ port: env.API_PORT, host: env.API_HOST });
   fastify.log.info(`API running on http://${env.API_HOST}:${env.API_PORT} [${env.NODE_ENV}]`);
+
+  // Ollama auto-setup (non-blocking — runs in background)
+  bootOllamaSetup((msg) => fastify.log.info(msg)).catch(() => {});
 
   // Weekly contest auto-create
   createWeeklyContest()

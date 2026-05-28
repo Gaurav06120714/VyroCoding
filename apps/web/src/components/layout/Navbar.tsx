@@ -23,7 +23,7 @@ export function Navbar({ title: _title }: { title?: string }) {
       </Link>
       <nav className="hidden md:flex items-center gap-1">
         {navLinks.map(({ href, label }) => (
-          <Link key={href} href={href} className="text-sm font-medium text-white/50 hover:text-white transition-colors px-3 py-1.5 rounded-[10px] hover:bg-white/[0.06]">
+          <Link key={href} href={href} className="text-sm font-medium text-[#8a9bb5] hover:text-white transition-colors px-3 py-1.5 rounded-[10px] hover:bg-[rgba(0,212,255,0.06)]">
             {label}
           </Link>
         ))}
@@ -31,12 +31,12 @@ export function Navbar({ title: _title }: { title?: string }) {
       <div className="flex items-center gap-3 shrink-0">
         {user ? (
           <>
-            <span className="text-sm text-white/40 hidden md:block">{user.username}</span>
+            <span className="text-sm text-[#8a9bb5] hidden md:block">{user.username}</span>
             <Button variant="secondary" size="sm" onClick={logout}>Sign Out</Button>
           </>
         ) : (
           <>
-            <Link href="/login" className="text-sm font-medium text-white/50 hover:text-white transition-colors">Sign in</Link>
+            <Link href="/login" className="text-sm font-medium text-[#8a9bb5] hover:text-white transition-colors">Sign in</Link>
             <Link href="/register"><Button variant="primary" size="sm">Start Free</Button></Link>
           </>
         )}
