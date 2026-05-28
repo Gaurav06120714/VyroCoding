@@ -1,3 +1,4 @@
+import { env } from '../config/env.js';
 /**
  * Redis Pub/Sub for scalable WebSocket broadcasting.
  * When a message is published to a room channel, ALL API instances
@@ -7,7 +8,7 @@ import Redis from 'ioredis';
 import dotenv from 'dotenv';
 dotenv.config();
 
-const REDIS_URL = process.env.REDIS_URL ?? 'redis://localhost:6379';
+const REDIS_URL = env.REDIS_URL;
 
 // Separate Redis connections for pub and sub (ioredis requirement)
 let pubClient: Redis | null = null;

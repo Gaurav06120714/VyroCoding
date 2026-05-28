@@ -1,13 +1,11 @@
 import Redis from 'ioredis';
-import dotenv from 'dotenv';
-
-dotenv.config();
+import { env } from '../config/env.js';
 
 let redisClient: Redis | null = null;
 
 export function getRedis(): Redis {
   if (!redisClient) {
-    redisClient = new Redis(process.env.REDIS_URL ?? 'redis://localhost:6379', {
+    redisClient = new Redis(env.REDIS_URL, {
       maxRetriesPerRequest: 3,
       lazyConnect: true,
     });

@@ -1,10 +1,8 @@
 import { ExecutionResult, Language, SubmissionStatus } from '@vyro/types';
-import dotenv from 'dotenv';
+import { env } from '../config/env.js';
 
-dotenv.config();
-
-const JUDGE0_API_URL = process.env.JUDGE0_API_URL ?? 'https://ce.judge0.com';
-const JUDGE0_API_KEY = process.env.JUDGE0_API_KEY ?? '';
+const JUDGE0_API_URL = env.JUDGE0_API_URL;
+const JUDGE0_API_KEY = env.JUDGE0_API_KEY;
 
 export const LANGUAGES: Record<Language, { id: Language; name: string; monacoId: string }> = {
   [Language.JavaScript]: { id: Language.JavaScript, name: 'JavaScript (Node.js 18)', monacoId: 'javascript' },

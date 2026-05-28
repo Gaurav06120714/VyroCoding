@@ -3,7 +3,9 @@ import cors from '@fastify/cors';
 import jwt from '@fastify/jwt';
 import websocket from '@fastify/websocket';
 import rateLimit from '@fastify/rate-limit';
-import dotenv from 'dotenv';
+
+// env MUST be the first import so all modules see populated process.env
+import { env } from './config/env.js';
 
 import { authRoutes }         from './routes/auth.routes.js';
 import { problemsRoutes }     from './routes/problems.routes.js';
@@ -17,54 +19,39 @@ import { languagesRoutes }    from './routes/languages.routes.js';
 import { getRedis }           from './services/redis.service.js';
 import { ipRateLimit, userRateLimit, logSecurityEvent } from './plugins/rate-limit.js';
 
-dotenv.config();
-
 const fastify = Fastify({
-  /**
-   * In production, use a structured JSON logger (e.g., pino-pretty or ship
-   * to Datadog/Grafana). Disable pretty-printing in prod for performance.
-   */
   logger: {
-    level: process.env.LOG_LEVEL ?? (process.env.NODE_ENV === 'production' ? 'warn' : 'info'),
+    level: env.LOG_LEVEL,
   },
   /**
-   * trustProxy must match your actual infrastructure.
-   * - true    → trust all X-Forwarded-For IPs (dangerous without firewalls)
-   * - 1       → trust one proxy hop (standard for single Nginx/ALB)
-   * - '10.0.0.0/8' → trust only IPs in your private network
-   *
-   * This affects request.ip and must align with PROXY_DEPTH in rate-limit.ts.
+   * trustProxy must match PROXY_DEPTH in your infrastructure.
+   * - 1 = single Nginx/ALB in front (standard)
+   * - Set PROXY_DEPTH=0 in dev for direct connections
    */
-  trustProxy: parseInt(process.env.PROXY_DEPTH ?? '1', 10) > 0,
+  trustProxy: env.PROXY_DEPTH > 0,
 });
 
 async function bootstrap(): Promise<void> {
 
   // ── CORS ──────────────────────────────────────────────────────────────────
+  // CORS_ORIGIN is parsed at startup by env.ts — always an array.
+  // In production, set CORS_ORIGIN=https://yourapp.com (no trailing slash).
   await fastify.register(cors, {
-    origin: process.env.CORS_ORIGIN
-      ? process.env.CORS_ORIGIN.split(',').map((o) => o.trim())
-      : true, // dev: allow all; set CORS_ORIGIN in production
+    origin: env.NODE_ENV === 'production' ? env.CORS_ORIGIN : true,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   });
 
   // ── JWT ───────────────────────────────────────────────────────────────────
-  const jwtSecret = process.env.JWT_SECRET;
-  if (!jwtSecret) {
-    if (process.env.NODE_ENV === 'production') {
-      throw new Error('JWT_SECRET must be set to a strong random value in production');
-    }
-    fastify.log.warn('JWT_SECRET is not set — using insecure dev-only fallback. Set JWT_SECRET in .env');
+  // JWT_SECRET validation happens in env.ts at startup (throws in production).
+  // Dev fallback: random-per-boot value so dev tokens never leak to production.
+  const jwtSecret = env.JWT_SECRET || ('dev-only-unsafe:' + Math.random().toString(36));
+  if (!env.JWT_SECRET) {
+    fastify.log.warn('JWT_SECRET not set — tokens are signed with a random dev-only key (invalid after restart)');
   }
-
-  // DEV-ONLY fallback: a recognisably-bad string that will never appear in real tokens.
-  // Any token signed with this value will be rejected the moment JWT_SECRET is set.
-  // In production the check above throws before we get here.
-  const _devOnlyFallback = 'dev-only-unsafe-fallback:' + Math.random().toString(36);
   await fastify.register(jwt, {
-    secret: jwtSecret ?? _devOnlyFallback,
-    sign: { expiresIn: process.env.JWT_EXPIRES_IN ?? '7d' },
+    secret: jwtSecret,
+    sign: { expiresIn: env.JWT_EXPIRES_IN },
   });
 
   await fastify.register(websocket);
@@ -154,11 +141,8 @@ async function bootstrap(): Promise<void> {
   });
 
   // ── Start ─────────────────────────────────────────────────────────────────
-  const port = parseInt(process.env.API_PORT ?? '3001', 10);
-  const host = process.env.API_HOST ?? '0.0.0.0';
-
-  await fastify.listen({ port, host });
-  fastify.log.info(`API running on http://${host}:${port} [${process.env.NODE_ENV ?? 'development'}]`);
+  await fastify.listen({ port: env.API_PORT, host: env.API_HOST });
+  fastify.log.info(`API running on http://${env.API_HOST}:${env.API_PORT} [${env.NODE_ENV}]`);
 
   // Weekly contest auto-create
   createWeeklyContest()

@@ -1,0 +1,68 @@
+version: "3.9"
+
+# =============================================================================
+# VyroCoding — Docker Compose (development / local)
+#
+# Secret management:
+#   - Secrets come from apps/api/.env (gitignored, never committed).
+#   - Setup: cp .env.example apps/api/.env && fill in values.
+#   - The `environment:` block only overrides service-discovery URLs,
+#     never secrets.
+# =============================================================================
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: vyrocoding
+      POSTGRES_PASSWORD: vyrocoding
+      POSTGRES_DB: vyro_coding
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vyrocoding"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  api:
+    build:
+      context: apps/api
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "3003:3003"
+    env_file:
+      # Contains secrets. Must exist locally. NEVER committed.
+      # Setup: cp .env.example apps/api/.env
+      - apps/api/.env
+    environment:
+      # Override service discovery URLs only — not secrets
+      DATABASE_URL: postgresql://vyrocoding:vyrocoding@postgres:5432/vyro_coding
+      REDIS_URL: redis://redis:6379
+      NODE_ENV: development
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  redis_data:

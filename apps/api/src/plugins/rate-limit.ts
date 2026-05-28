@@ -39,13 +39,10 @@ import { getRedis } from '../services/redis.service.js';
  * Set too high → you use an internal proxy IP as the client key (all traffic
  *                shares one bucket and the limit is immediately hit).
  */
-const PROXY_DEPTH = parseInt(process.env.PROXY_DEPTH ?? '1', 10);
+import { env } from '../config/env.js';
 
-/**
- * IP_HASH_SALT: Salt used when hashing IPs and emails for secure log output.
- * Must be kept secret. Generate with: openssl rand -hex 32
- */
-const IP_HASH_SALT = process.env.IP_HASH_SALT ?? 'vyrocoding-change-this-salt-in-prod';
+const PROXY_DEPTH = env.PROXY_DEPTH;
+const IP_HASH_SALT = env.IP_HASH_SALT;
 
 // ── Sliding-window Lua script ─────────────────────────────────────────────────
 /**

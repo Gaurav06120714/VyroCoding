@@ -1,10 +1,8 @@
 import { Pool, PoolClient } from 'pg';
-import dotenv from 'dotenv';
-
-dotenv.config();
+import { env } from '../config/env.js';
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: env.DATABASE_URL,
   max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 5000,
@@ -21,7 +19,7 @@ export async function query<T = Record<string, unknown>>(
   const start = Date.now();
   const res = await pool.query(text, params);
   const duration = Date.now() - start;
-  if (process.env.NODE_ENV === 'development') {
+  if (env.NODE_ENV === 'development') {
     console.log('query', { text: text.slice(0, 80), duration, rows: res.rowCount });
   }
   return res.rows as T[];

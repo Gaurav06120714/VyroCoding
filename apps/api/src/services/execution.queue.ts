@@ -1,3 +1,4 @@
+import { env } from '../config/env.js';
 /**
  * BullMQ execution queue — async code execution with result broadcasting.
  * Jobs flow: enqueue → Judge0 → store result → broadcast to room via Pub/Sub
@@ -7,7 +8,7 @@ import type { Redis } from 'ioredis';
 import dotenv from 'dotenv';
 dotenv.config();
 
-const REDIS_URL = process.env.REDIS_URL ?? 'redis://localhost:6379';
+const REDIS_URL = env.REDIS_URL;
 const QUEUE_NAME = 'code-execution';
 
 // ── Job payload ────────────────────────────────────────────────────────────────
