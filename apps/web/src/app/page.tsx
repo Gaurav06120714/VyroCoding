@@ -2,14 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Code2, Users, Cpu, Bot, Zap } from 'lucide-react';
-import { useScrollAnimation } from '@/hooks/useScrollAnimation';
-
-const stats = [
-  { value: '10+', label: 'Problems'     },
-  { value: '7',   label: 'Languages'    },
-  { value: '∞',   label: 'Possibilities'},
-];
+import { Code2, Users, Cpu, Bot } from 'lucide-react';
 
 const navLinks = [
   { href: '/problems',    label: 'Problems'    },
@@ -28,7 +21,6 @@ const footerLinks = [
 ];
 
 export default function LandingPage() {
-  useScrollAnimation();
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -82,7 +74,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── IDE mockup ─────────────────────────────────────────────────── */}
-      <div className="max-w-5xl mx-auto px-4 pb-20 fade-up">
+      <div className="max-w-5xl mx-auto px-4 pb-20">
         <div className="lg p-5">
           <div className="flex items-center gap-1.5 mb-4">
             <div className="w-3 h-3 rounded-full bg-[#ff5f57]" />
@@ -91,7 +83,7 @@ export default function LandingPage() {
             <span className="ml-3 text-[11px] text-white/30 font-mono">two-sum.js — Vyro Coding</span>
             <div className="ml-auto flex items-center gap-2">
               <span className="inline-flex items-center gap-1.5 bg-[rgba(39,166,68,0.15)] text-easy text-[11px] font-semibold px-2.5 py-1 rounded-full">
-                <span className="w-1.5 h-1.5 rounded-full bg-easy animate-pulse" />Live
+                <span className="w-1.5 h-1.5 rounded-full bg-easy" />Live
               </span>
               <div className="flex -space-x-1.5">
                 {['A','B','C'].map((c) => (
@@ -123,7 +115,7 @@ export default function LandingPage() {
       </div>
 
       {/* ── Execution result proof ─────────────────────────────────── */}
-      <div className="mx-4 max-w-5xl md:mx-auto mb-0 fade-up">
+      <div className="mx-4 max-w-5xl md:mx-auto mb-0">
         <div className="lg-card rounded-[18px] overflow-hidden">
           {/* Terminal bar */}
           <div className="flex items-center gap-2 px-4 h-9 border-b border-white/[0.06] bg-white/[0.02]">
@@ -171,7 +163,7 @@ export default function LandingPage() {
         </h2>
         <div className="grid grid-cols-12 gap-4">
 
-          <div className="col-span-12 md:col-span-7 fade-up fade-up-delay-1 lg-card lg-shimmer p-6">
+          <div className="col-span-12 md:col-span-7lg-card p-6">
             <div className="w-10 h-10 lg rounded-[12px] mb-4 flex items-center justify-center">
               <Users className="w-5 h-5 text-white/60" />
             </div>
@@ -186,20 +178,20 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div className="col-span-12 md:col-span-5 fade-up fade-up-delay-2 lg-card lg-shimmer p-6">
+          <div className="col-span-12 md:col-span-5lg-card p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="w-10 h-10 lg rounded-[12px] flex items-center justify-center">
                 <Bot className="w-5 h-5 text-white/60" />
               </div>
               <span className="inline-flex items-center gap-1.5 bg-[rgba(94,106,210,0.15)] text-[#828fff] text-[11px] font-semibold px-2.5 py-1 rounded-full border border-[rgba(94,106,210,0.25)]">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#828fff] animate-pulse" />AI thinking
+                <span className="w-1.5 h-1.5 rounded-full bg-[#828fff]" />AI thinking
               </span>
             </div>
             <h3 className="font-semibold tracking-[-0.03em] text-white mb-2" style={{ fontSize: 'var(--text-xl)' }}>AI Interviewer</h3>
             <p className="text-sm text-white/50 leading-relaxed">A mock interviewer powered by Claude that reads your code, gives hints when you&apos;re stuck, and scores your solution when you finish.</p>
           </div>
 
-          <div className="col-span-12 md:col-span-5 fade-up fade-up-delay-3 lg-card lg-shimmer p-6">
+          <div className="col-span-12 md:col-span-5lg-card p-6">
             <div className="w-10 h-10 lg rounded-[12px] mb-4 flex items-center justify-center">
               <Cpu className="w-5 h-5 text-white/60" />
             </div>
@@ -212,7 +204,7 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div className="col-span-12 md:col-span-7 fade-up fade-up-delay-4 lg-card lg-shimmer p-6">
+          <div className="col-span-12 md:col-span-7lg-card p-6">
             <h3 className="font-semibold tracking-[-0.03em] text-white mb-5" style={{ fontSize: 'var(--text-xl)' }}>Live Leaderboard</h3>
             <div className="space-y-2.5">
               {[
@@ -238,7 +230,7 @@ export default function LandingPage() {
 
       {/* ── CTA banner ─────────────────────────────────────────────────── */}
       <section className="py-24 max-w-6xl mx-auto px-4">
-        <div className="lg-strong p-12 text-center fade-up">
+        <div className="lg-strong p-12 text-center">
           <h2 className="font-bold tracking-[-0.04em] text-white mb-4" style={{ fontSize: 'var(--text-2xl)' }}>
             Start coding with other people
           </h2>
