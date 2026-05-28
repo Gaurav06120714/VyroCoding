@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
-import { Search } from 'lucide-react';
+import { Search, CheckCircle2, Zap } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Badge } from '@/components/ui/Badge';
 import { problemsApi } from '@/lib/api';
@@ -17,6 +17,7 @@ interface ProblemRow {
   difficulty: string;
   tags: string[];
   acceptanceRate: number;
+  solved?: boolean;
 }
 
 const DIFFICULTY_FILTERS: { value: Difficulty; label: string }[] = [
@@ -26,13 +27,64 @@ const DIFFICULTY_FILTERS: { value: Difficulty; label: string }[] = [
   { value: 'hard',   label: 'Hard'   },
 ];
 
+const DIFF_COLORS: Record<string, string> = {
+  easy:   'text-emerald-400',
+  medium: 'text-yellow-400',
+  hard:   'text-red-400',
+};
+
+// ── Skeleton row ───────────────────────────────────────────────────────────────
+
+function SkeletonRow() {
+  return (
+    <div className="flex items-center gap-4 px-6 py-4 border-b border-white/[0.04]">
+      <div className="w-8 h-4 bg-white/[0.06] rounded animate-pulse" />
+      <div className="w-5 h-5 bg-white/[0.06] rounded-full animate-pulse shrink-0" />
+      <div className="flex-1 h-4 bg-white/[0.06] rounded animate-pulse max-w-sm" />
+      <div className="w-16 h-5 bg-white/[0.06] rounded-full animate-pulse" />
+      <div className="hidden md:flex gap-1.5">
+        <div className="w-16 h-5 bg-white/[0.06] rounded animate-pulse" />
+        <div className="w-16 h-5 bg-white/[0.06] rounded animate-pulse" />
+      </div>
+      <div className="w-10 h-4 bg-white/[0.06] rounded animate-pulse ml-auto" />
+    </div>
+  );
+}
+
+// ── Stats bar ──────────────────────────────────────────────────────────────────
+
+function StatsBar({ problems }: { problems: ProblemRow[] }) {
+  const easy   = problems.filter((p) => p.difficulty === 'easy').length;
+  const medium = problems.filter((p) => p.difficulty === 'medium').length;
+  const hard   = problems.filter((p) => p.difficulty === 'hard').length;
+
+  return (
+    <div className="flex items-center gap-5 text-xs text-white/40">
+      <span className="flex items-center gap-1.5">
+        <span className="w-2 h-2 rounded-full bg-emerald-400/70" />
+        <span>{easy} Easy</span>
+      </span>
+      <span className="flex items-center gap-1.5">
+        <span className="w-2 h-2 rounded-full bg-yellow-400/70" />
+        <span>{medium} Medium</span>
+      </span>
+      <span className="flex items-center gap-1.5">
+        <span className="w-2 h-2 rounded-full bg-red-400/70" />
+        <span>{hard} Hard</span>
+      </span>
+    </div>
+  );
+}
+
+// ── Main page ──────────────────────────────────────────────────────────────────
+
 export default function ProblemsPage() {
-  const [problems, setProblems]   = useState<ProblemRow[]>([]);
-  const [total, setTotal]         = useState(0);
+  const [problems, setProblems]     = useState<ProblemRow[]>([]);
+  const [total, setTotal]           = useState(0);
   const [difficulty, setDifficulty] = useState<Difficulty>('all');
-  const [search, setSearch]       = useState('');
-  const [page, setPage]           = useState(1);
-  const [loading, setLoading]     = useState(true);
+  const [search, setSearch]         = useState('');
+  const [page, setPage]             = useState(1);
+  const [loading, setLoading]       = useState(true);
 
   const fetchProblems = useCallback(async () => {
     setLoading(true);
@@ -53,46 +105,54 @@ export default function ProblemsPage() {
   }, [difficulty, search, page]);
 
   useEffect(() => {
-    const timer = setTimeout(fetchProblems, 300);
-    return () => clearTimeout(timer);
+    const t = setTimeout(fetchProblems, 250);
+    return () => clearTimeout(t);
   }, [fetchProblems]);
 
   useEffect(() => { setPage(1); }, [difficulty, search]);
 
+  const totalPages = Math.ceil(total / 50);
+
   return (
-    <div className="min-h-screen bg-canvas">
+    <div className="min-h-screen bg-[#0d1117]">
       <Navbar />
-      <div className="p-8 max-w-6xl mx-auto">
 
-        {/* Header */}
-        <h1 className="text-[40px] font-semibold tracking-[-1px] text-white mb-2 leading-none">Problems</h1>
-        <p className="text-sm text-white/50 mb-8">{total} problems available</p>
+      <div className="max-w-6xl mx-auto px-6 py-10">
 
-        {/* Filter row */}
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
+        {/* ── Header ── */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-white mb-1">Problems</h1>
+            <p className="text-sm text-white/40">{total > 0 ? `${total} problems` : 'Loading…'}</p>
+          </div>
+          {!loading && <StatsBar problems={problems} />}
+        </div>
+
+        {/* ── Filters ── */}
+        <div className="flex flex-col sm:flex-row gap-3 mb-5">
           {/* Search */}
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/25" />
             <input
               type="text"
-              placeholder="Search problems..."
+              placeholder="Search by title or tag…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="lg-input h-10 pl-9 pr-4 text-sm"
+              className="w-full h-9 pl-9 pr-4 bg-white/[0.04] border border-white/[0.08] hover:border-white/[0.14] focus:border-[#828fff]/50 focus:outline-none rounded-xl text-sm text-white placeholder:text-white/20 transition-colors"
             />
           </div>
 
           {/* Difficulty pills */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             {DIFFICULTY_FILTERS.map(({ value, label }) => (
               <button
                 key={value}
                 onClick={() => setDifficulty(value)}
                 className={cn(
-                  'text-sm font-medium transition-colors',
+                  'h-9 px-4 rounded-xl text-sm font-medium transition-all border',
                   difficulty === value
-                    ? 'lg-pill text-white px-4 py-1.5'
-                    : 'rounded-full px-4 py-1.5 text-white/40 border border-white/[0.08] hover:text-white hover:bg-white/[0.06]'
+                    ? 'bg-[#828fff]/15 border-[#828fff]/35 text-white font-semibold'
+                    : 'bg-transparent border-white/[0.08] text-white/40 hover:text-white/70 hover:border-white/20'
                 )}
               >
                 {label}
@@ -101,99 +161,109 @@ export default function ProblemsPage() {
           </div>
         </div>
 
-        {/* Table */}
-        <div className="lg-card overflow-hidden">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-white/[0.08]">
-                <th className="text-left text-[11px] font-semibold uppercase tracking-[0.88px] text-white/40 px-6 py-3 w-16">#</th>
-                <th className="text-left text-[11px] font-semibold uppercase tracking-[0.88px] text-white/40 px-6 py-3">Title</th>
-                <th className="text-left text-[11px] font-semibold uppercase tracking-[0.88px] text-white/40 px-6 py-3">Difficulty</th>
-                <th className="text-left text-[11px] font-semibold uppercase tracking-[0.88px] text-white/40 px-6 py-3 hidden md:table-cell">Tags</th>
-                <th className="text-right text-[11px] font-semibold uppercase tracking-[0.88px] text-white/40 px-6 py-3">Acceptance</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                Array.from({ length: 10 }).map((_, i) => (
-                  <tr key={i} className="border-b border-white/[0.05]">
-                    <td className="px-6 py-4"><div className="h-4 w-6 bg-white/10 rounded animate-pulse" /></td>
-                    <td className="px-6 py-4"><div className="h-4 w-48 bg-white/10 rounded animate-pulse" /></td>
-                    <td className="px-6 py-4"><div className="h-4 w-16 bg-white/10 rounded animate-pulse" /></td>
-                    <td className="px-6 py-4 hidden md:table-cell"><div className="h-4 w-32 bg-white/10 rounded animate-pulse" /></td>
-                    <td className="px-6 py-4 text-right"><div className="h-4 w-10 bg-white/10 rounded animate-pulse ml-auto" /></td>
-                  </tr>
-                ))
-              ) : problems.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-6 py-16 text-center text-white/40 text-sm">
-                    No problems found.
-                  </td>
-                </tr>
-              ) : (
-                problems.map((p, idx) => (
-                  <tr
-                    key={p.id}
-                    className="border-b border-white/[0.05] last:border-b-0 hover:bg-white/[0.04] transition-colors cursor-pointer"
-                  >
-                    <td className="px-6 py-4 text-sm text-white/30 w-12">
-                      {(page - 1) * 20 + idx + 1}
-                    </td>
-                    <td className="px-6 py-4">
-                      <Link
-                        href={`/problems/${p.slug}`}
-                        className="text-sm font-medium text-white hover:text-[#828fff] transition-colors"
-                      >
-                        {p.title}
-                      </Link>
-                    </td>
-                    <td className="px-6 py-4">
-                      <Badge variant={p.difficulty as 'easy' | 'medium' | 'hard'}>
-                        {p.difficulty.charAt(0).toUpperCase() + p.difficulty.slice(1)}
-                      </Badge>
-                    </td>
-                    <td className="px-6 py-4 hidden md:table-cell">
-                      <div className="flex gap-1.5 flex-wrap">
-                        {p.tags.slice(0, 3).map((tag) => (
-                          <span
-                            key={tag}
-                            className="lg-pill text-xs text-white/50 px-2.5 py-0.5"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-right text-sm text-white/40">
-                      {p.acceptanceRate.toFixed(1)}%
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+        {/* ── Table ── */}
+        <div className="rounded-2xl border border-white/[0.07] overflow-hidden bg-[#161b22]/50">
 
-          {/* Pagination */}
-          {total > 50 && (
-            <div className="flex items-center justify-center gap-3 p-4 border-t border-white/[0.08]">
-              <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className="lg-btn-secondary text-sm px-4 !h-8 disabled:opacity-40"
-              >
-                Previous
-              </button>
-              <span className="text-sm text-white/40">Page {page} of {Math.ceil(total / 50)}</span>
-              <button
-                onClick={() => setPage((p) => p + 1)}
-                disabled={page * 50 >= total}
-                className="lg-btn-secondary text-sm px-4 !h-8 disabled:opacity-40"
-              >
-                Next
-              </button>
+          {/* Header row */}
+          <div className="grid grid-cols-[40px_32px_1fr_90px_auto_70px] items-center gap-4 px-6 py-3 border-b border-white/[0.07] bg-white/[0.02]">
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-white/25">#</span>
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-white/25"></span>
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-white/25">Title</span>
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-white/25">Difficulty</span>
+            <span className="hidden md:block text-[10px] font-semibold uppercase tracking-widest text-white/25">Tags</span>
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-white/25 text-right">Acceptance</span>
+          </div>
+
+          {/* Body */}
+          {loading ? (
+            Array.from({ length: 12 }).map((_, i) => <SkeletonRow key={i} />)
+          ) : problems.length === 0 ? (
+            <div className="py-20 text-center">
+              <Zap className="w-8 h-8 text-white/10 mx-auto mb-3" />
+              <p className="text-sm text-white/30">No problems found.</p>
+              {search && (
+                <button onClick={() => setSearch('')} className="mt-2 text-xs text-[#828fff] hover:underline">
+                  Clear search
+                </button>
+              )}
             </div>
+          ) : (
+            problems.map((p, idx) => (
+              <Link
+                key={p.id}
+                href={`/problems/${p.slug}`}
+                className="grid grid-cols-[40px_32px_1fr_90px_auto_70px] items-center gap-4 px-6 py-3.5 border-b border-white/[0.04] last:border-0 hover:bg-white/[0.03] transition-colors group"
+              >
+                {/* Index */}
+                <span className="text-[12px] text-white/25 font-mono tabular-nums">
+                  {(page - 1) * 50 + idx + 1}
+                </span>
+
+                {/* Solved indicator */}
+                <div className="flex items-center justify-center">
+                  {p.solved ? (
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500/70" />
+                  ) : (
+                    <div className="w-4 h-4 rounded-full border border-white/[0.1] group-hover:border-white/20 transition-colors" />
+                  )}
+                </div>
+
+                {/* Title */}
+                <span className="text-[13px] font-medium text-white/85 group-hover:text-white transition-colors truncate">
+                  {p.title}
+                </span>
+
+                {/* Difficulty */}
+                <span className={`text-[12px] font-semibold ${DIFF_COLORS[p.difficulty] ?? 'text-white/50'}`}>
+                  {p.difficulty.charAt(0).toUpperCase() + p.difficulty.slice(1)}
+                </span>
+
+                {/* Tags */}
+                <div className="hidden md:flex gap-1.5 flex-wrap max-w-[240px]">
+                  {p.tags.slice(0, 2).map((tag) => (
+                    <span
+                      key={tag}
+                      className="text-[10px] px-2 py-0.5 rounded-md bg-white/[0.05] border border-white/[0.07] text-white/40 font-medium"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                  {p.tags.length > 2 && (
+                    <span className="text-[10px] text-white/20">+{p.tags.length - 2}</span>
+                  )}
+                </div>
+
+                {/* Acceptance */}
+                <span className="text-[12px] text-white/35 font-mono tabular-nums text-right">
+                  {p.acceptanceRate.toFixed(0)}%
+                </span>
+              </Link>
+            ))
           )}
         </div>
+
+        {/* ── Pagination ── */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-2 mt-6">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="h-8 px-4 rounded-xl text-xs font-medium bg-white/[0.05] border border-white/[0.08] text-white/50 hover:text-white hover:bg-white/[0.08] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            >
+              Previous
+            </button>
+            <span className="text-xs text-white/30 px-2 tabular-nums">
+              {page} / {totalPages}
+            </span>
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page >= totalPages}
+              className="h-8 px-4 rounded-xl text-xs font-medium bg-white/[0.05] border border-white/[0.08] text-white/50 hover:text-white hover:bg-white/[0.08] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            >
+              Next
+            </button>
+          </div>
+        )}
 
       </div>
     </div>

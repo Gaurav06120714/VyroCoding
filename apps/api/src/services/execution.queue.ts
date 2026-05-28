@@ -107,8 +107,8 @@ export function startExecutionWorker(): void {
 
       for (const tc of visibleCases) {
         try {
-          const wrappedCode = wrapCode(code, languageId as Language);
-          const result = await submitAndWait(wrappedCode, languageId as Language, tc.input, 20, 500);
+          const wrappedCode = wrapCode(code, languageId as typeof Language[keyof typeof Language]);
+          const result = await submitAndWait(wrappedCode, languageId as typeof Language[keyof typeof Language], tc.input, 20, 500);
           lastResult = result;
           const actual = (result.stdout ?? '').trim();
           if (result.submissionStatus === 'accepted' && actual === tc.expectedOutput.trim()) {

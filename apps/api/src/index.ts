@@ -16,6 +16,7 @@ import { leaderboardRoutes }  from './routes/leaderboard.routes.js';
 import { usersRoutes }        from './routes/users.routes.js';
 import { adminRoutes }        from './routes/admin.routes.js';
 import { languagesRoutes }    from './routes/languages.routes.js';
+import { aiRoutes }           from './routes/ai.routes.js';
 import { getRedis }           from './services/redis.service.js';
 import { ipRateLimit, userRateLimit, logSecurityEvent } from './plugins/rate-limit.js';
 
@@ -118,6 +119,14 @@ async function bootstrap(): Promise<void> {
   }, { prefix: '/admin' });
 
   await fastify.register(languagesRoutes, { prefix: '/languages' });
+
+  // /ai — AI assistant endpoints (rate limited: 20/min/IP + 60/hr/user)
+  // AI calls are expensive (GPU time on NVIDIA NIM), protect against abuse.
+  await fastify.register(async (aiInstance) => {
+    aiInstance.addHook('preHandler', ipRateLimit(20, 60_000, 'ai:ip'));
+    aiInstance.addHook('preHandler', userRateLimit(60, 60 * 60_000, 'ai:user'));
+    await aiInstance.register(aiRoutes);
+  }, { prefix: '/ai' });
 
   // ── Health check (exempt from rate limiting) ──────────────────────────────
   fastify.get('/health', {

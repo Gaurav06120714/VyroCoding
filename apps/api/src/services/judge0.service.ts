@@ -56,7 +56,7 @@ function base64Encode(str: string): string {
  * The test case input is always a JSON array of arguments.
  * We extract the function name from the first line and call it.
  */
-function wrapCode(code: string, languageId: Language): string {
+export function wrapCode(code: string, languageId: Language): string {
   if (languageId === Language.JavaScript || languageId === Language.TypeScript) {
     // Extract function name: "function myFunc(" → "myFunc"
     const match = code.match(/function\s+(\w+)\s*\(/);

@@ -70,7 +70,7 @@ export const authApi = {
 // ─── Problems ────────────────────────────────────────────────────────────────
 
 export const problemsApi = {
-  list: (params?: { difficulty?: string; tag?: string; search?: string; page?: number }) =>
+  list: (params?: { difficulty?: string; tag?: string; search?: string; page?: number; pageSize?: number }) =>
     request<{
       data: {
         items: Array<{

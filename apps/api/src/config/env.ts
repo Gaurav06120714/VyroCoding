@@ -46,6 +46,11 @@ interface Env {
 
   // Collab (Y.js WebSocket)
   COLLAB_PORT: number;
+
+  // AI — DeepSeek v4 Pro via NVIDIA NIM (OpenAI-compatible API)
+  NVIDIA_API_KEY: string;
+  NVIDIA_BASE_URL: string;
+  AI_MODEL: string;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -138,6 +143,10 @@ function buildEnv(): Env {
     JUDGE0_API_KEY: optional('JUDGE0_API_KEY', ''),
 
     COLLAB_PORT: optionalInt('COLLAB_PORT', 1234),
+
+    NVIDIA_API_KEY: optional('NVIDIA_API_KEY', ''),
+    NVIDIA_BASE_URL: optional('NVIDIA_BASE_URL', 'https://integrate.api.nvidia.com/v1'),
+    AI_MODEL: optional('AI_MODEL', 'deepseek-ai/deepseek-r1'),
   };
 
   validateProductionConfig(parsed);
