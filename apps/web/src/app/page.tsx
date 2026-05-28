@@ -63,14 +63,13 @@ export default function LandingPage() {
 
       {/* ── Hero ───────────────────────────────────────────────────────── */}
       <section className="relative pt-36 pb-24 px-4 text-center overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% -20%, rgba(94,106,210,0.15), transparent)' }} />
         <div className="relative max-w-4xl mx-auto">
           <h1 className="font-extrabold leading-[1.0] tracking-[-0.05em] text-white mb-6" style={{ fontSize: 'var(--text-hero)' }}>
-            Code Together.<br />
-            <span className="gradient-text">Win Together.</span>
+            Practice code.<br />
+            <span className="gradient-text">With other people.</span>
           </h1>
           <p className="text-white/55 max-w-lg mx-auto mb-10 leading-relaxed" style={{ fontSize: 'var(--text-lg)' }}>
-            Real-time coding rooms, AI interviewer, Judge0 execution, live contests — all in one place.
+            Shared coding rooms, an AI interviewer that gives real feedback, code execution in 7 languages, and live contests. All in one place.
           </p>
           <div className="flex flex-col items-center gap-3">
             <div className="flex items-center gap-3">
@@ -137,9 +136,9 @@ export default function LandingPage() {
 
       {/* ── Feature bento grid ─────────────────────────────────────────── */}
       <section className="py-24 max-w-6xl mx-auto px-4">
-        <p className="text-[13px] font-medium uppercase tracking-[0.4px] text-white/40 text-center mb-3">Platform Features</p>
+        <p className="text-[13px] font-medium uppercase tracking-[0.4px] text-white/40 text-center mb-3">What&apos;s included</p>
         <h2 className="font-bold tracking-[-0.04em] text-white text-center mb-12" style={{ fontSize: 'var(--text-3xl)' }}>
-          Everything you need to practice and compete
+          A platform built for real practice
         </h2>
         <div className="grid grid-cols-12 gap-4">
 
@@ -148,7 +147,7 @@ export default function LandingPage() {
               <Users className="w-5 h-5 text-white/60" />
             </div>
             <h3 className="font-semibold tracking-[-0.03em] text-white mb-2" style={{ fontSize: 'var(--text-xl)' }}>Real-time Rooms</h3>
-            <p className="text-sm text-white/50 leading-relaxed mb-6">Code together with live cursor sync. Yjs CRDT keeps every keystroke in perfect sync across participants.</p>
+            <p className="text-sm text-white/50 leading-relaxed mb-6">Write code with other people in real time. Everyone sees every keystroke as it happens — no refresh, no lag.</p>
             <div className="lg-card p-3 font-mono text-[11px]" style={{ borderRadius: '12px' }}>
               <div className="flex items-center gap-2 mb-2 text-white/30">
                 <span className="w-2 h-2 rounded-full bg-easy" /><span>room-42 · 3 participants</span>
@@ -168,7 +167,7 @@ export default function LandingPage() {
               </span>
             </div>
             <h3 className="font-semibold tracking-[-0.03em] text-white mb-2" style={{ fontSize: 'var(--text-xl)' }}>AI Interviewer</h3>
-            <p className="text-sm text-white/50 leading-relaxed">Claude-powered mock interviews with contextual hints, feedback, and grading in real time.</p>
+            <p className="text-sm text-white/50 leading-relaxed">A mock interviewer powered by Claude that reads your code, gives hints when you&apos;re stuck, and scores your solution when you finish.</p>
           </div>
 
           <div className="col-span-12 md:col-span-5 fade-up fade-up-delay-3 lg-card lg-shimmer p-6">
@@ -176,7 +175,7 @@ export default function LandingPage() {
               <Cpu className="w-5 h-5 text-white/60" />
             </div>
             <h3 className="font-semibold tracking-[-0.03em] text-white mb-2" style={{ fontSize: 'var(--text-xl)' }}>Code Execution</h3>
-            <p className="text-sm text-white/50 leading-relaxed mb-4">Run code in 7+ languages instantly via Judge0. See results in milliseconds.</p>
+            <p className="text-sm text-white/50 leading-relaxed mb-4">Paste your solution and run it against test cases. Supports 7 languages. Results come back in under a second.</p>
             <div className="lg-card p-3 font-mono text-[11px] space-y-1" style={{ borderRadius: '12px' }}>
               <div className="text-white/40">{'$ run solution.py'}</div>
               <div className="text-easy">{'✓ All 23 test cases passed'}</div>
@@ -212,10 +211,10 @@ export default function LandingPage() {
       <section className="py-24 max-w-6xl mx-auto px-4">
         <div className="lg-strong p-12 text-center fade-up">
           <h2 className="font-bold tracking-[-0.04em] text-white mb-4" style={{ fontSize: 'var(--text-2xl)' }}>
-            Ready to level up your coding?
+            Start coding with other people
           </h2>
           <p className="text-white/50 mb-8 max-w-md mx-auto leading-relaxed" style={{ fontSize: 'var(--text-base)' }}>
-            Join developers who practice, compete, and grow together on Vyro Coding.
+            Free to sign up. Practice problems on your own, or drop into a room with other developers and work through them together.
           </p>
           <Link href="/register" className="lg-btn-primary inline-flex items-center justify-center px-8 h-10 text-sm">
             Create Free Account
