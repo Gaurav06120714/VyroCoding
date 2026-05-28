@@ -51,15 +51,19 @@ async function bootstrap(): Promise<void> {
 
   // ── JWT ───────────────────────────────────────────────────────────────────
   const jwtSecret = process.env.JWT_SECRET;
-  if (!jwtSecret || jwtSecret === 'fallback-secret-change-me') {
+  if (!jwtSecret) {
     if (process.env.NODE_ENV === 'production') {
       throw new Error('JWT_SECRET must be set to a strong random value in production');
     }
-    fastify.log.warn('JWT_SECRET is not set — using insecure default (dev only)');
+    fastify.log.warn('JWT_SECRET is not set — using insecure dev-only fallback. Set JWT_SECRET in .env');
   }
 
+  // DEV-ONLY fallback: a recognisably-bad string that will never appear in real tokens.
+  // Any token signed with this value will be rejected the moment JWT_SECRET is set.
+  // In production the check above throws before we get here.
+  const _devOnlyFallback = 'dev-only-unsafe-fallback:' + Math.random().toString(36);
   await fastify.register(jwt, {
-    secret: jwtSecret ?? 'fallback-secret-change-me',
+    secret: jwtSecret ?? _devOnlyFallback,
     sign: { expiresIn: process.env.JWT_EXPIRES_IN ?? '7d' },
   });
 
