@@ -122,15 +122,44 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* ── Stats strip ────────────────────────────────────────────────── */}
-      <div className="lg py-16 mx-4 max-w-5xl md:mx-auto mb-0 rounded-[18px]">
-        <div className="flex justify-center gap-20">
-          {stats.map(({ value, label }, i) => (
-            <div key={label} className={`text-center fade-up fade-up-delay-${i + 1}`}>
-              <div className="gradient-text font-extrabold leading-none" style={{ fontSize: 'var(--text-3xl)' }}>{value}</div>
-              <div className="text-sm text-white/40 uppercase tracking-[0.4px] mt-2">{label}</div>
+      {/* ── Execution result proof ─────────────────────────────────── */}
+      <div className="mx-4 max-w-5xl md:mx-auto mb-0 fade-up">
+        <div className="lg-card rounded-[18px] overflow-hidden">
+          {/* Terminal bar */}
+          <div className="flex items-center gap-2 px-4 h-9 border-b border-white/[0.06] bg-white/[0.02]">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f57]/70" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[#febc2e]/70" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[#28c840]/70" />
+            <span className="ml-3 text-[11px] text-white/30 font-mono">judge · room-42 · alice_dev</span>
+            <span className="ml-auto inline-flex items-center gap-1.5 bg-[rgba(39,166,68,0.12)] text-easy text-[11px] font-semibold px-2.5 py-1 rounded-full">
+              <span className="w-1.5 h-1.5 rounded-full bg-easy" />Accepted
+            </span>
+          </div>
+          {/* Result grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-0 divide-x divide-white/[0.06]">
+            {[
+              { label: 'Problem', value: 'Valid Parentheses', sub: 'Easy · Stack' },
+              { label: 'Runtime', value: '56 ms', sub: 'faster than 87.3%' },
+              { label: 'Memory', value: '42.4 MB', sub: 'less than 91.2%' },
+              { label: 'Test cases', value: '91 / 91', sub: 'all passed' },
+            ].map(({ label, value, sub }) => (
+              <div key={label} className="px-6 py-5">
+                <div className="text-[10px] uppercase tracking-[0.5px] text-white/30 mb-2">{label}</div>
+                <div className="font-mono font-semibold text-white text-[15px] mb-0.5">{value}</div>
+                <div className="text-[11px] text-white/30">{sub}</div>
+              </div>
+            ))}
+          </div>
+          {/* Submission bar */}
+          <div className="border-t border-white/[0.06] px-6 py-3 flex items-center gap-4 bg-white/[0.01]">
+            <span className="text-[11px] text-white/25 font-mono">JavaScript · submitted 2 min ago</span>
+            <div className="flex gap-1.5 ml-auto">
+              {[100, 87, 72, 94, 56, 88, 100, 91, 76, 100, 83, 95].map((p, i) => (
+                <div key={i} className="w-1 rounded-full bg-easy/60" style={{ height: `${Math.max(8, p * 0.24)}px`, opacity: p === 100 ? 1 : 0.4 }} />
+              ))}
+              <span className="text-[10px] text-white/20 ml-1 self-end">pass rate</span>
             </div>
-          ))}
+          </div>
         </div>
       </div>
 
