@@ -1,0 +1,98 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ── Lint & Type-check ────────────────────────────────────────────────────────
+  lint-and-typecheck:
+    name: Lint & Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check
+        run: pnpm run type-check
+
+      - name: Lint
+        run: pnpm run lint
+        # lint script may not exist on all packages — continue on error
+        continue-on-error: true
+
+  # ── Docker Build & Validate ───────────────────────────────────────────────────
+  docker-build:
+    name: Docker Build & Validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Prepare .env for CI
+        run: |
+          cp .env.example .env
+          # Replace placeholder secrets with dummy CI values
+          sed -i 's/REPLACE_WITH_64_HEX_CHARS_FROM_CRYPTO_RANDOM/ci-jwt-secret-dummy-64-hex-chars-for-testing-only-not-real/' .env
+          sed -i 's/REPLACE_WITH_RANDOM_HEX_FOR_PRIVACY_PRESERVING_LOGS/ci-hash-salt-dummy/' .env
+
+      - name: Validate docker-compose.yml
+        run: docker compose config --quiet
+
+      - name: Validate docker-compose.dev.yml
+        run: docker compose -f docker-compose.dev.yml config --quiet
+
+      - name: Build API image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build Collab image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/collab/Dockerfile
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build Web image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/web/Dockerfile
+          push: false
+          build-args: |
+            NEXT_PUBLIC_API_URL=http://localhost:3003
+            NEXT_PUBLIC_COLLAB_URL=ws://localhost:1234
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Start infrastructure and verify health
+        run: |
+          docker compose up -d postgres redis
+          echo "Waiting for postgres and redis to be healthy..."
+          timeout 60 bash -c 'until docker compose ps postgres | grep -q "healthy"; do sleep 2; done'
+          timeout 30 bash -c 'until docker compose ps redis | grep -q "healthy"; do sleep 2; done'
+          docker compose exec -T postgres pg_isready -U vyrocoding -d vyro_coding
+          docker compose exec -T redis redis-cli ping
+          docker compose down

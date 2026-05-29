@@ -1,0 +1,20 @@
+# =============================================================================
+# VyroCoding Web — Development Dockerfile (Next.js hot reload)
+# Build context: repo root
+# =============================================================================
+
+FROM node:20-alpine
+WORKDIR /app
+ENV NODE_ENV=development
+
+RUN npm install -g pnpm@9
+
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY packages/ ./packages/
+COPY apps/web/package.json ./apps/web/
+
+RUN pnpm install
+
+EXPOSE 3002
+
+CMD ["pnpm", "--filter", "@vyro/web", "run", "dev"]

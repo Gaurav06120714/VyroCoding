@@ -1,0 +1,53 @@
+# Dependencies — rebuilt inside Docker
+node_modules
+apps/*/node_modules
+packages/*/node_modules
+
+# Build output
+.next
+dist
+build
+
+# Secrets — NEVER bake into images
+.env
+.env.local
+.env.*.local
+apps/api/.env
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+
+# OS artefacts
+.DS_Store
+Thumbs.db
+
+# Test / coverage
+coverage
+.nyc_output
+*.test.ts
+*.spec.ts
+__tests__
+
+# Dev tooling (not needed in production image)
+.claude
+.git
+.gitignore
+.gitattributes
+
+# Docs
+README.md
+ABOUT.md
+FEATURES.md
+SETUP.md
+
+# Docker files themselves (avoid recursive COPY confusion)
+docker-compose*.yml
+apps/*/Dockerfile*
+.dockerignore
+
+# Misc
+backups
+*.sql.gz

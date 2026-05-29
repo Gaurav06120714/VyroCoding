@@ -1,0 +1,135 @@
+# =============================================================================
+# VyroCoding — Docker Compose (DEVELOPMENT)
+#
+# Features: hot reload for all apps, ports exposed on host, no secrets required
+#
+# Usage:
+#   docker compose -f docker-compose.dev.yml up --build
+#   docker compose -f docker-compose.dev.yml up --build api   # single service
+# =============================================================================
+
+services:
+
+  # ── PostgreSQL ───────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: vyrocoding
+      POSTGRES_PASSWORD: vyrocoding
+      POSTGRES_DB: vyro_coding
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+      - ./apps/api/src/db/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vyrocoding -d vyro_coding"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - vyro-dev
+
+  # ── Redis ────────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redis_data_dev:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - vyro-dev
+
+  # ── API (Fastify — tsx watch) ─────────────────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile.dev
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      API_PORT: 3003
+      API_HOST: 0.0.0.0
+      LOG_LEVEL: ${LOG_LEVEL:-debug}
+      PROXY_DEPTH: 0
+      DATABASE_URL: postgresql://vyrocoding:vyrocoding@postgres:5432/vyro_coding
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET:-dev-jwt-secret-change-in-prod-minimum-32-chars-here}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3002}
+      JUDGE0_API_URL: ${JUDGE0_API_URL:-https://ce.judge0.com}
+      JUDGE0_API_KEY: ${JUDGE0_API_KEY:-}
+      NVIDIA_API_KEY: ${NVIDIA_API_KEY:-}
+      NVIDIA_BASE_URL: ${NVIDIA_BASE_URL:-https://integrate.api.nvidia.com/v1}
+      AI_MODEL: ${AI_MODEL:-deepseek-ai/deepseek-v4-pro}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      EMAIL_FROM: ${EMAIL_FROM:-VyroCoding <noreply@localhost>}
+      APP_URL: ${APP_URL:-http://localhost:3002}
+      IP_HASH_SALT: ${IP_HASH_SALT:-dev-hash-salt-not-for-production}
+    ports:
+      - "3003:3003"
+    volumes:
+      # Mount source for hot reload (read-only prevents accidental writes from container)
+      - ./apps/api/src:/app/apps/api/src:ro
+      - ./packages:/app/packages:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - vyro-dev
+
+  # ── Web (Next.js — hot reload) ────────────────────────────────────────────────
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile.dev
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3003}
+      NEXT_PUBLIC_COLLAB_URL: ${NEXT_PUBLIC_COLLAB_URL:-ws://localhost:1234}
+    ports:
+      - "3002:3002"
+    volumes:
+      - ./apps/web/src:/app/apps/web/src:ro
+      - ./apps/web/public:/app/apps/web/public:ro
+      - ./packages:/app/packages:ro
+    depends_on:
+      - api
+    networks:
+      - vyro-dev
+
+  # ── Collab (Y.js — tsx watch) ─────────────────────────────────────────────────
+  collab:
+    build:
+      context: .
+      dockerfile: apps/collab/Dockerfile.dev
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      COLLAB_PORT: 1234
+    ports:
+      - "1234:1234"
+    volumes:
+      - ./apps/collab/src:/app/apps/collab/src:ro
+    networks:
+      - vyro-dev
+
+# ── Networks ──────────────────────────────────────────────────────────────────
+networks:
+  vyro-dev:
+    driver: bridge
+
+# ── Volumes ───────────────────────────────────────────────────────────────────
+volumes:
+  postgres_data_dev:
+  redis_data_dev:

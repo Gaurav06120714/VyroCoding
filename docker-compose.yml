@@ -1,68 +1,181 @@
-version: "3.9"
-
 # =============================================================================
-# VyroCoding — Docker Compose (development / local)
+# VyroCoding — Docker Compose (PRODUCTION)
 #
-# Secret management:
-#   - Secrets come from apps/api/.env (gitignored, never committed).
-#   - Setup: cp .env.example apps/api/.env && fill in values.
-#   - The `environment:` block only overrides service-discovery URLs,
-#     never secrets.
+# Prerequisites:
+#   cp .env.example .env  &&  fill in secrets
+#   bash scripts/docker-init.sh   (auto-generates missing secrets)
+#
+# Usage:
+#   docker compose up -d --build          # start all services
+#   docker compose logs -f api            # tail a service
+#   docker compose down                   # stop (keeps volumes)
+#   docker compose down -v                # stop + wipe volumes (⚠ data loss)
 # =============================================================================
 
 services:
+
+  # ── PostgreSQL ───────────────────────────────────────────────────────────────
   postgres:
     image: postgres:15-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_USER: vyrocoding
-      POSTGRES_PASSWORD: vyrocoding
-      POSTGRES_DB: vyro_coding
-    ports:
-      - "5432:5432"
+      POSTGRES_USER: ${POSTGRES_USER:-vyrocoding}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-vyrocoding}
+      POSTGRES_DB: ${POSTGRES_DB:-vyro_coding}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./apps/api/src/db/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U vyrocoding"]
-      interval: 5s
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-vyrocoding} -d ${POSTGRES_DB:-vyro_coding}"]
+      interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 30s
+    networks:
+      - vyro-internal
+    deploy:
+      resources:
+        limits:
+          memory: 512m
 
+  # ── Redis ────────────────────────────────────────────────────────────────────
   redis:
     image: redis:7-alpine
     restart: unless-stopped
-    ports:
-      - "127.0.0.1:6379:6379"
+    # requirepass is empty string when REDIS_PASSWORD is unset (no auth in dev)
+    command: >
+      redis-server
+      --save 60 1
+      --loglevel warning
+      ${REDIS_PASSWORD:+--requirepass ${REDIS_PASSWORD}}
     volumes:
       - redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
+      interval: 10s
+      timeout: 5s
       retries: 5
+    networks:
+      - vyro-internal
+    deploy:
+      resources:
+        limits:
+          memory: 256m
 
+  # ── API (Fastify) ─────────────────────────────────────────────────────────────
   api:
     build:
-      context: apps/api
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: apps/api/Dockerfile
     restart: unless-stopped
-    ports:
-      - "3003:3003"
-    env_file:
-      # Contains secrets. Must exist locally. NEVER committed.
-      # Setup: cp .env.example apps/api/.env
-      - apps/api/.env
     environment:
-      # Override service discovery URLs only — not secrets
-      DATABASE_URL: postgresql://vyrocoding:vyrocoding@postgres:5432/vyro_coding
-      REDIS_URL: redis://redis:6379
-      NODE_ENV: development
+      NODE_ENV: production
+      API_PORT: 3003
+      API_HOST: 0.0.0.0
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      PROXY_DEPTH: ${PROXY_DEPTH:-1}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-vyrocoding}:${POSTGRES_PASSWORD:-vyrocoding}@postgres:5432/${POSTGRES_DB:-vyro_coding}
+      REDIS_URL: redis://${REDIS_PASSWORD:+:${REDIS_PASSWORD}@}redis:6379
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3002}
+      JUDGE0_API_URL: ${JUDGE0_API_URL:-https://ce.judge0.com}
+      JUDGE0_API_KEY: ${JUDGE0_API_KEY:-}
+      NVIDIA_API_KEY: ${NVIDIA_API_KEY:-}
+      NVIDIA_BASE_URL: ${NVIDIA_BASE_URL:-https://integrate.api.nvidia.com/v1}
+      AI_MODEL: ${AI_MODEL:-deepseek-ai/deepseek-v4-pro}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      EMAIL_FROM: ${EMAIL_FROM:-VyroCoding <noreply@example.com>}
+      APP_URL: ${APP_URL:-http://localhost:3002}
+      IP_HASH_SALT: ${IP_HASH_SALT}
+    ports:
+      - "${API_PORT:-3003}:3003"
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3003/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - vyro-internal
+      - vyro-external
+    deploy:
+      resources:
+        limits:
+          memory: 512m
 
+  # ── Web (Next.js) ─────────────────────────────────────────────────────────────
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3003}
+        NEXT_PUBLIC_COLLAB_URL: ${NEXT_PUBLIC_COLLAB_URL:-ws://localhost:1234}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3002
+      HOSTNAME: 0.0.0.0
+    ports:
+      - "${WEB_PORT:-3002}:3002"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3002 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - vyro-external
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+
+  # ── Collab (Y.js WebSocket) ───────────────────────────────────────────────────
+  collab:
+    build:
+      context: .
+      dockerfile: apps/collab/Dockerfile
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      COLLAB_PORT: 1234
+    ports:
+      - "${COLLAB_PORT:-1234}:1234"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:1234/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - vyro-external
+    deploy:
+      resources:
+        limits:
+          memory: 128m
+
+# ── Networks ──────────────────────────────────────────────────────────────────
+networks:
+  vyro-internal:
+    # postgres + redis only reachable by api — not exposed to outside world
+    driver: bridge
+    internal: true
+  vyro-external:
+    driver: bridge
+
+# ── Volumes ───────────────────────────────────────────────────────────────────
 volumes:
   postgres_data:
+    driver: local
   redis_data:
+    driver: local

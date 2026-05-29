@@ -1,0 +1,22 @@
+# =============================================================================
+# VyroCoding API — Development Dockerfile (hot reload via tsx watch)
+# Build context: repo root
+# =============================================================================
+
+FROM node:20-alpine
+WORKDIR /app
+ENV NODE_ENV=development
+
+RUN npm install -g pnpm@9
+
+# Install dependencies at build time; source is mounted as a volume at runtime
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY packages/ ./packages/
+COPY apps/api/package.json ./apps/api/
+
+RUN pnpm install
+
+EXPOSE 3003
+
+# tsx watch picks up source changes via the volume mount
+CMD ["pnpm", "--filter", "@vyro/api", "run", "dev"]
