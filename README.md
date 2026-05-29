@@ -42,11 +42,21 @@ A **real-time multiplayer coding platform** where students and professionals sol
 | 🔄 **Async Queue** | BullMQ execution queue backed by Redis — room submissions get priority |
 | 🌐 **Free Judge0** | Uses `ce.judge0.com` — no API key needed, no credit card |
 
+### AI Assistant
+| Feature | Detail |
+|---|---|
+| 💡 **Hint** | Tag-aware hints based on the problem's topics |
+| 🧠 **Explain** | Step-by-step explanation of your current code |
+| 🔍 **Review** | Code quality feedback and improvement suggestions |
+| 🐛 **Debug** | Identifies bugs and explains the fix |
+| 💬 **Chat** | Free-form AI chat about the problem (streamed via SSE) |
+| 🤖 **Model Support** | NVIDIA NIM / Ollama — configurable via `AI_BASE_URL` + `AI_MODEL` env vars |
+
 ### Problems & Contests
 | Feature | Detail |
 |---|---|
-| 📝 **100 Problems** | LeetCode-style problems across Easy / Medium / Hard |
-| 💡 **Smart Hints** | Tag-based hints (hash-map, two-pointers, dp, sliding-window, etc.) |
+| 📝 **103 Problems** | LeetCode-style problems across Easy / Medium / Hard |
+| 📊 **Accurate Stats** | Difficulty counts (22 Easy · 53 Medium · 28 Hard) fetched from real totals |
 | 📜 **Submissions** | Full history with code viewer (read-only Monaco modal) |
 | 🏆 **Contests** | Timed competitions with countdown, auto-start, auto-end |
 | 📅 **Weekly Contests** | Auto-created each week with non-repeating problem picks |
@@ -71,10 +81,28 @@ A **real-time multiplayer coding platform** where students and professionals sol
 | **Code Execution** | Judge0 CE (`ce.judge0.com`) — free public instance, no key needed |
 | **Voice** | WebRTC `RTCPeerConnection` + Web Audio API (speaking detection via AnalyserNode) |
 | **Auth** | JWT (bcryptjs + signed tokens, 7-day expiry) |
+| **AI Streaming** | Server-Sent Events (SSE) with CORS headers manually merged on `writeHead` |
 | **State** | Zustand — auth, room, theme, toast, editor settings stores |
-| **Styling** | Tailwind CSS + dark-first design system |
+| **Styling** | Tailwind CSS — dark slate + cyan design system (`#0a0e17` canvas, `#00d4ff` primary) |
 | **Monorepo** | pnpm workspaces (`apps/api`, `apps/web`, `packages/types`) |
 | **Rate Limiting** | `@fastify/rate-limit` — 30 req/min global, 10 req/min on execute routes |
+
+---
+
+## 🎨 Design System
+
+The UI uses a custom dark slate + cyan theme defined in `tailwind.config.ts`:
+
+| Token | Value | Usage |
+|---|---|---|
+| `canvas` | `#0a0e17` | Page background |
+| `surface1` | `#0f1623` | Cards, panels |
+| `surface2` | `#161d2e` | Elevated surfaces |
+| `surface3` | `#1e2740` | Hover states |
+| `primary` | `#00d4ff` | Buttons, links, active states |
+| `easy` | `#10b981` | Easy difficulty label |
+| `medium` | `#f59e0b` | Medium difficulty label |
+| `hard` | `#ef4444` | Hard difficulty label |
 
 ---
 
@@ -94,6 +122,7 @@ VyroCoding/
 │   │       │   ├── editor/
 │   │       │   │   ├── CodeEditor.tsx        → Monaco + cursor broadcast
 │   │       │   │   ├── EditorToolbar.tsx     → Font/theme/wrap settings
+│   │       │   │   ├── AiChatDrawer.tsx      → AI assistant panel (SSE streaming)
 │   │       │   │   ├── OutputPanel.tsx       → Output + Test Cases tabs
 │   │       │   │   ├── SubmissionsPanel.tsx  → History + code viewer
 │   │       │   │   └── CustomInput.tsx       → Custom stdin panel
@@ -109,6 +138,8 @@ VyroCoding/
 │   │       ├── hooks/
 │   │       │   ├── useRoomWebSocket.ts       → Phase 2 WS hook (auto-reconnect, all events)
 │   │       │   └── useVoiceChat.ts           → WebRTC voice (P2P mesh)
+│   │       ├── styles/
+│   │       │   └── globals.css               → Global styles + design tokens
 │   │       └── store/
 │   │           ├── editor.store.ts           → Font/theme/settings (persisted)
 │   │           ├── auth.store.ts
@@ -118,13 +149,16 @@ VyroCoding/
 │   └── api/                          → Fastify REST + WebSocket API (port 3003)
 │       └── src/
 │           ├── routes/
-│           │   ├── rooms.routes.ts   → WS server + all 20 event types
-│           │   ├── execute.routes.ts → /run, /run-all, /submit, /submissions
+│           │   ├── rooms.routes.ts    → WS server + all 20 event types
+│           │   ├── execute.routes.ts  → /run, /run-all, /submit, /submissions
 │           │   ├── problems.routes.ts → Problems CRUD + Redis cache
 │           │   ├── contests.routes.ts → Contests + weekly auto-create
+│           │   ├── ai.routes.ts       → AI hint/explain/review/debug/chat (SSE)
 │           │   └── languages.routes.ts → 7 supported languages
 │           ├── services/
 │           │   ├── judge0.service.ts  → Judge0 client + wrapCode() harness
+│           │   ├── ai.service.ts      → AI prompt builder + SSE streamer
+│           │   ├── email.service.ts   → Resend email (password reset links)
 │           │   ├── pubsub.service.ts  → Redis Pub/Sub + room state + presence
 │           │   ├── execution.queue.ts → BullMQ worker (priority queue)
 │           │   └── redis.service.ts   → Redis singleton
@@ -149,9 +183,10 @@ VyroCoding/
 │  ├── Monaco Editor  ──cursor broadcast──►              │
 │  ├── useRoomWebSocket hook                              │
 │  │    └── auto-reconnect + heartbeat (10s)             │
+│  ├── AiChatDrawer ──SSE stream──►                      │
 │  └── WebRTC (P2P voice mesh)                           │
 └────────────┬────────────────────────────────────────────┘
-             │ WebSocket + REST
+             │ WebSocket + REST + SSE
              ▼
 ┌─────────────────────────────────────────────────────────┐
 │              Fastify API (port 3003)                     │
@@ -161,8 +196,9 @@ VyroCoding/
 │  │  /problems    │   │    20 event types            │    │
 │  │  /execute     │   │    JWT auth from ?token=     │    │
 │  │  /contests    │   │    Pub/Sub subscriber        │    │
-│  │  /languages   │   │    Heartbeat / presence      │    │
-│  └──────┬───────┘   └──────────┬──────────────────┘    │
+│  │  /ai (SSE)    │   │    Heartbeat / presence      │    │
+│  │  /auth        │   └──────────┬──────────────────┘    │
+│  └──────┬───────┘              │                         │
 │         │                      │                         │
 └─────────┼──────────────────────┼─────────────────────────┘
           │                      │
@@ -200,19 +236,10 @@ VyroCoding/
 - pnpm 9+
 - PostgreSQL 16+
 - Redis 7+
-- [Vyro Browser](https://github.com/Gaurav06120714/VyroBrowser) *(optional — auto-opens the app)*
 
 ### 1. Clone & Install
 
-**macOS / Linux**
 ```bash
-git clone https://github.com/Gaurav06120714/VyroCoding.git
-cd VyroCoding
-pnpm install
-```
-
-**Windows**
-```powershell
 git clone https://github.com/Gaurav06120714/VyroCoding.git
 cd VyroCoding
 pnpm install
@@ -224,7 +251,7 @@ pnpm install
 cp .env.example .env
 ```
 
-Edit `.env`:
+Edit `apps/api/.env`:
 
 ```env
 # Database
@@ -233,17 +260,38 @@ DATABASE_URL=postgresql://vyro:vyro@localhost:5432/vyro_coding
 # Redis (required for Pub/Sub, BullMQ, cache, presence)
 REDIS_URL=redis://localhost:6379
 
-# Auth
-JWT_SECRET=your-secret-key-min-32-chars
+# Auth — generate with: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+JWT_SECRET=your-64-hex-char-secret
 
 # Judge0 — free public instance, no API key needed
 JUDGE0_API_URL=https://ce.judge0.com
 
-# Frontend
-NEXT_PUBLIC_API_URL=http://localhost:3003
+# AI Assistant (optional — pick one)
+# Option A: NVIDIA NIM
+AI_BASE_URL=https://integrate.api.nvidia.com/v1
+AI_API_KEY=your-nvidia-nim-key
+AI_MODEL=deepseek-ai/deepseek-r1
+
+# Option B: Ollama (local, free)
+AI_BASE_URL=http://localhost:11434/v1
+AI_API_KEY=ollama
+AI_MODEL=llama3
+
+# Email — password reset links (dev mode logs link to console, no key needed)
+RESEND_API_KEY=re_your_key   # optional — only needed for production email sending
+EMAIL_FROM=VyroCoding <noreply@vyrocoding.com>
+
+# Frontend URL — used in password reset email links
+APP_URL=http://localhost:3002
 ```
 
-> No Judge0 API key required. `ce.judge0.com` is the free public instance.
+> **Important:** `APP_URL` must match the port your web app runs on (`3002` by default). Wrong port = broken password reset links.
+
+Edit `apps/web/.env.local`:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:3003
+```
 
 ### 3. Database Setup
 
@@ -267,34 +315,18 @@ cd apps/api
 # 10 core problems (quick start)
 DATABASE_URL=postgresql://vyro:vyro@localhost:5432/vyro_coding npx tsx src/db/seed.ts
 
-# 100 problems (full library)
+# 103 problems (full library)
 DATABASE_URL=postgresql://vyro:vyro@localhost:5432/vyro_coding npx tsx src/db/seed-100.ts
 ```
 
 ### 4. Start All Services
 
-**macOS (all-in-one)**
 ```bash
-npm run dev:vyro
-# Starts API + Web, auto-opens in Vyro Browser
-```
+# Terminal 1 — API (port 3003)
+pnpm --filter @vyro/api run dev
 
-**macOS (manual, 2 terminals)**
-```bash
-# Terminal 1 — API + BullMQ worker + Redis Pub/Sub
-cd apps/api && npm run dev
-
-# Terminal 2 — Next.js frontend
-cd apps/web && PORT=3002 npm run dev
-```
-
-**Windows (manual, 2 PowerShell windows)**
-```powershell
-# Window 1 — API
-cd apps\api; $env:DATABASE_URL="postgresql://vyro:vyro@localhost:5432/vyro_coding"; npm run dev
-
-# Window 2 — Web
-cd apps\web; $env:PORT=3002; npm run dev
+# Terminal 2 — Web (port 3002)
+pnpm --filter @vyro/web run dev
 ```
 
 ### 5. Open
@@ -303,8 +335,9 @@ cd apps\web; $env:PORT=3002; npm run dev
 |---|---|
 | 🌐 Web App | http://localhost:3002 |
 | ⚙️ API | http://localhost:3003 |
+| ❤️ Health Check | http://localhost:3003/health |
 
-> Redis must be running (`redis-server`) before starting the API — it powers the execution queue, presence, Pub/Sub, and cache.
+> Redis must be running (`redis-server`) before starting the API.
 
 ---
 
@@ -349,7 +382,34 @@ The room WebSocket server handles 20 event types:
 
 ---
 
-## 📦 Problem Library (100 Problems)
+## 🤖 AI Assistant (SSE)
+
+The AI panel (`Hint / Explain / Review / Debug / Chat`) streams responses via **Server-Sent Events**.
+
+### How it works
+
+```
+Browser  ──POST /ai/chat──►  Fastify
+                              └── reply.raw.writeHead(200, { 'Content-Type': 'text/event-stream', ...corsHeaders })
+                              └── AI SDK streamText() → pipe chunks as `data: {...}\n\n`
+                              └── `data: [DONE]\n\n` on finish
+```
+
+> **CORS note:** `reply.raw.writeHead()` bypasses Fastify's CORS plugin. The route manually reads CORS headers from `reply.getHeaders()` and merges them into `writeHead` so the browser doesn't block the stream.
+
+### Configuration
+
+| Env Var | Default | Description |
+|---|---|---|
+| `AI_BASE_URL` | `http://localhost:11434/v1` | OpenAI-compatible API base URL |
+| `AI_API_KEY` | `ollama` | API key (use `ollama` for local Ollama) |
+| `AI_MODEL` | `deepseek-ai/deepseek-r1` | Model name |
+
+Works with any OpenAI-compatible endpoint: **Ollama**, **NVIDIA NIM**, **OpenAI**, **Together AI**, etc.
+
+---
+
+## 📦 Problem Library (103 Problems)
 
 Covers all major patterns:
 
@@ -372,7 +432,7 @@ Covers all major patterns:
 
 - [x] Real-time code sync over WebSocket
 - [x] Monaco Editor with font/theme/settings persistence
-- [x] Resizable panels (problem / editor / output)
+- [x] Resizable panels (problem / editor / output) — polling-based fix for react-resizable-panels timing bug
 - [x] Code execution via Judge0 CE (free, no key)
 - [x] Auto-inject stdin harness for JS/TS (transparent to user)
 - [x] Per-test-case pass/fail output panel
@@ -380,7 +440,7 @@ Covers all major patterns:
 - [x] Submission history with code viewer
 - [x] Rate limiting (global + per-route)
 - [x] Redis cache for problems list
-- [x] 100 problems across all major patterns
+- [x] 103 problems across all major patterns
 - [x] Weekly auto-created contests (non-repeating problems)
 - [x] **Phase 2: Live cursors** — see other users' positions in Monaco
 - [x] **Phase 2: Presence system** — avatar stack, typing indicators, WS status
@@ -389,13 +449,27 @@ Covers all major patterns:
 - [x] **Phase 2: Redis Pub/Sub** — horizontally scalable WS broadcasting
 - [x] **Phase 2: BullMQ execution queue** — async, prioritized, retry-safe
 - [x] **Phase 2: Voice chat** — WebRTC P2P mesh with speaking detection
-- [x] Smart hints panel (tag-based contextual hints)
-- [ ] AI Interviewer (Claude API integration)
+- [x] **Phase 3: AI Assistant** — Hint / Explain / Review / Debug / Chat via SSE streaming
+- [x] **Phase 3: UI redesign** — dark slate + cyan design system
+- [x] **Phase 3: Password reset** — email token flow with correct APP_URL
+- [x] **Phase 3: Accurate difficulty stats** — real totals fetched independently of pagination
 - [ ] Yjs collaborative editing (conflict-free merging)
 - [ ] Screen sharing
 - [ ] Custom problem creation by users
 - [ ] Company hiring portal (B2B)
 - [ ] Mobile responsive layout
+
+---
+
+## 🐛 Known Fixes & Gotchas
+
+| Issue | Root Cause | Fix |
+|---|---|---|
+| AI panel "Failed to fetch" | `reply.raw.writeHead()` bypasses Fastify CORS plugin | Manually merge `reply.getHeaders()` CORS headers into `writeHead` |
+| JWT tokens invalid after restart | Random per-boot fallback secret | Set a real `JWT_SECRET` in `.env` |
+| Panel layout collapses on load | `react-resizable-panels` writes deferred flex value after mount | Poll with `setInterval(applyFlex, 30ms)` for 1.5s after data loads |
+| Reset password link goes to wrong port | `APP_URL` defaulted to `localhost:3000` | Set `APP_URL=http://localhost:3002` in `apps/api/.env` |
+| StatsBar shows "0 Medium" | Counted from current page (50 items), not full dataset | Fetch 3 parallel API calls with `pageSize: 1` to get real totals |
 
 ---
 

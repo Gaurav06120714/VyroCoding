@@ -161,7 +161,7 @@ function buildEnv(): Env {
 
     RESEND_API_KEY: optional('RESEND_API_KEY', ''),
     EMAIL_FROM: optional('EMAIL_FROM', 'VyroCoding <noreply@vyrocoding.com>'),
-    APP_URL: optional('APP_URL', 'http://localhost:3000'),
+    APP_URL: optional('APP_URL', 'http://localhost:3002'),
   };
 
   validateProductionConfig(parsed);
