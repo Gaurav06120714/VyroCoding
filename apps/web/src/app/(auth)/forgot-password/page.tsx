@@ -29,12 +29,12 @@ export default function ForgotPasswordPage() {
       };
 
       if (resetToken) {
-        // Dev mode: server returned the raw token
+        
         setDevToken(resetToken);
         setDevLink(resetLink ?? `/reset-password?token=${resetToken}`);
         setStage('dev-token');
       } else {
-        // Production: email sent (or we pretend it was for security)
+        
         setStage('email-sent');
       }
     } catch (err) {
@@ -63,7 +63,7 @@ export default function ForgotPasswordPage() {
 
         <div className="lg-strong p-8">
 
-          {/* ── Email sent (production) ─────────────────────────────────────── */}
+          {}
           {stage === 'email-sent' && (
             <div className="text-center space-y-4">
               <div className="mx-auto w-12 h-12 rounded-full flex items-center justify-center"
@@ -90,7 +90,7 @@ export default function ForgotPasswordPage() {
             </div>
           )}
 
-          {/* ── Dev mode: token display ─────────────────────────────────────── */}
+          {}
           {stage === 'dev-token' && (
             <div className="space-y-4">
               <div>
@@ -138,7 +138,7 @@ export default function ForgotPasswordPage() {
             </div>
           )}
 
-          {/* ── Form ───────────────────────────────────────────────────────── */}
+          {}
           {stage === 'form' && (
             <>
               <h1 className="text-xl font-bold text-ink mb-1">Forgot password?</h1>
