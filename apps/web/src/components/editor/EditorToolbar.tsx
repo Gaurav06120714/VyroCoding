@@ -29,7 +29,7 @@ export function EditorToolbar({ language, onLanguageChange }: EditorToolbarProps
       .list()
       .then((res) => setLanguages(res.data))
       .catch(() => {
-        // Fallback to static list from types
+        
         setLanguages(
           Object.entries(LANGUAGE_NAMES).map(([id, name]) => ({
             id: parseInt(id),
@@ -45,7 +45,7 @@ export function EditorToolbar({ language, onLanguageChange }: EditorToolbarProps
 
   return (
     <div className="h-9 bg-[#161b22] border-b border-white/[0.08] flex items-center justify-between px-3 shrink-0 gap-2">
-      {/* Left: Language dropdown */}
+      {}
       <div className="relative">
         <button
           onClick={() => setShowLangMenu(!showLangMenu)}
@@ -80,9 +80,9 @@ export function EditorToolbar({ language, onLanguageChange }: EditorToolbarProps
         )}
       </div>
 
-      {/* Right: Editor controls */}
+      {}
       <div className="flex items-center gap-1">
-        {/* Font size */}
+        {}
         <div className="flex items-center gap-0.5">
           <button
             onClick={() => setFontSize(fontSize - 1)}
@@ -103,7 +103,7 @@ export function EditorToolbar({ language, onLanguageChange }: EditorToolbarProps
 
         <div className="w-px h-4 bg-white/[0.08] mx-1" />
 
-        {/* Tab size */}
+        {}
         <div className="flex items-center gap-0.5">
           <button
             onClick={() => setTabSize(2)}
@@ -131,7 +131,7 @@ export function EditorToolbar({ language, onLanguageChange }: EditorToolbarProps
 
         <div className="w-px h-4 bg-white/[0.08] mx-1" />
 
-        {/* Word wrap toggle */}
+        {}
         <button
           onClick={toggleWordWrap}
           className={`w-6 h-6 flex items-center justify-center rounded transition-colors ${
@@ -144,7 +144,7 @@ export function EditorToolbar({ language, onLanguageChange }: EditorToolbarProps
           <WrapText className="w-3.5 h-3.5" />
         </button>
 
-        {/* Minimap toggle */}
+        {}
         <button
           onClick={toggleMinimap}
           className={`w-6 h-6 flex items-center justify-center rounded transition-colors ${
@@ -157,7 +157,7 @@ export function EditorToolbar({ language, onLanguageChange }: EditorToolbarProps
           <Map className="w-3.5 h-3.5" />
         </button>
 
-        {/* Theme toggle */}
+        {}
         <button
           onClick={() => setTheme(theme === 'vs-dark' ? 'vs' : 'vs-dark')}
           className="w-6 h-6 flex items-center justify-center text-white/40 hover:text-white/70 hover:bg-white/[0.06] rounded transition-colors"
