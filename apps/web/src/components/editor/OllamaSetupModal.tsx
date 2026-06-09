@@ -7,8 +7,6 @@ import {
 } from 'lucide-react';
 import type { OllamaSetupStatus } from '@/lib/api';
 
-// ── Platform detection ────────────────────────────────────────────────────────
-
 type Platform = 'mac' | 'linux' | 'windows';
 
 function detectPlatform(): Platform {
@@ -18,8 +16,6 @@ function detectPlatform(): Platform {
   if (ua.includes('mac')) return 'mac';
   return 'linux';
 }
-
-// ── Install instructions ──────────────────────────────────────────────────────
 
 const INSTALL_STEPS: Record<Platform, { title: string; steps: { cmd?: string; desc: string }[] }> = {
   mac: {
@@ -49,8 +45,6 @@ const INSTALL_STEPS: Record<Platform, { title: string; steps: { cmd?: string; de
     ],
   },
 };
-
-// ── Copyable command ──────────────────────────────────────────────────────────
 
 function CopyCmd({ cmd }: { cmd: string }) {
   const [copied, setCopied] = useState(false);
@@ -92,8 +86,6 @@ function CopyCmd({ cmd }: { cmd: string }) {
   );
 }
 
-// ── Pull progress bar ─────────────────────────────────────────────────────────
-
 interface PullProgress {
   status: string;
   percent?: number;
@@ -129,16 +121,12 @@ function PullProgressBar({ progress }: { progress: PullProgress | null }) {
   );
 }
 
-// ── Status indicator ──────────────────────────────────────────────────────────
-
 function StatusDot({ ok, loading }: { ok: boolean; loading?: boolean }) {
   if (loading) return <Loader2 className="w-3.5 h-3.5 text-[#00d4ff] animate-spin" />;
   return ok
     ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
     : <XCircle className="w-3.5 h-3.5 text-red-400/80" />;
 }
-
-// ── Main modal ────────────────────────────────────────────────────────────────
 
 interface OllamaSetupModalProps {
   onClose: () => void;
@@ -157,14 +145,12 @@ export function OllamaSetupModal({ onClose, onReady, initialStatus }: OllamaSetu
 
   const apiBase = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3003';
 
-  // Detect platform on mount
   useEffect(() => {
     const p = detectPlatform();
     setPlatform(p);
     setActiveTab(p);
   }, []);
 
-  // Fetch status
   const checkStatus = useCallback(async () => {
     setChecking(true);
     try {
@@ -177,7 +163,7 @@ export function OllamaSetupModal({ onClose, onReady, initialStatus }: OllamaSetu
         }
       }
     } catch {
-      // silently ignore
+      
     } finally {
       setChecking(false);
     }
@@ -187,7 +173,6 @@ export function OllamaSetupModal({ onClose, onReady, initialStatus }: OllamaSetu
     if (!initialStatus) checkStatus();
   }, [checkStatus, initialStatus]);
 
-  // Start daemon
   const handleStart = async () => {
     setStarting(true);
     try {
@@ -200,7 +185,6 @@ export function OllamaSetupModal({ onClose, onReady, initialStatus }: OllamaSetu
     }
   };
 
-  // Pull model via SSE
   const handlePull = async (model: string) => {
     if (pulling) return;
     setPulling(true);
@@ -247,7 +231,7 @@ export function OllamaSetupModal({ onClose, onReady, initialStatus }: OllamaSetu
                 await checkStatus();
               }
             }
-          } catch { /* skip */ }
+          } catch {  }
         }
       }
     } catch (err) {
@@ -269,13 +253,13 @@ export function OllamaSetupModal({ onClose, onReady, initialStatus }: OllamaSetu
 
   return (
     <>
-      {/* Backdrop */}
+      {}
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50" onClick={onClose} />
 
-      {/* Modal */}
+      {}
       <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-[560px] max-h-[90vh] overflow-y-auto bg-[#161b22] border border-white/[0.08] rounded-2xl shadow-2xl">
 
-        {/* Header */}
+        {}
         <div className="px-6 py-5 border-b border-white/[0.07] flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-[#00d4ff]/10 border border-[#00d4ff]/20 flex items-center justify-center shrink-0">
@@ -293,11 +277,11 @@ export function OllamaSetupModal({ onClose, onReady, initialStatus }: OllamaSetu
           </button>
         </div>
 
-        {/* Status checklist */}
+        {}
         <div className="px-6 py-4 border-b border-white/[0.06] space-y-2.5">
           <p className="text-[11px] text-white/30 uppercase tracking-widest font-semibold mb-3">Status</p>
 
-          {/* Installed */}
+          {}
           <div className="flex items-center gap-3">
             <StatusDot ok={isInstalled} loading={checking} />
             <span className={`text-[12px] font-medium ${isInstalled ? 'text-white/80' : 'text-white/40'}`}>
@@ -308,7 +292,7 @@ export function OllamaSetupModal({ onClose, onReady, initialStatus }: OllamaSetu
             )}
           </div>
 
-          {/* Running */}
+          {}
           <div className="flex items-center gap-3">
             <StatusDot ok={isDaemonRunning} loading={starting} />
             <span className={`text-[12px] font-medium ${isDaemonRunning ? 'text-white/80' : 'text-white/40'}`}>
@@ -325,7 +309,7 @@ export function OllamaSetupModal({ onClose, onReady, initialStatus }: OllamaSetu
             {starting && <span className="ml-auto text-[10px] text-white/30 animate-pulse">Starting…</span>}
           </div>
 
-          {/* Model */}
+          {}
           <div className="flex items-center gap-3">
             <StatusDot ok={hasModel} loading={pulling && !pullProgress?.done} />
             <span className={`text-[12px] font-medium ${hasModel ? 'text-white/80' : 'text-white/40'}`}>
@@ -341,14 +325,14 @@ export function OllamaSetupModal({ onClose, onReady, initialStatus }: OllamaSetu
             )}
           </div>
 
-          {/* Pull progress */}
+          {}
           {pullProgress && (
             <div className="mt-2">
               <PullProgressBar progress={pullProgress} />
             </div>
           )}
 
-          {/* All good banner */}
+          {}
           {isInstalled && isDaemonRunning && hasModel && (
             <div className="mt-2 flex items-center gap-2 bg-emerald-500/8 border border-emerald-500/20 rounded-xl px-4 py-3">
               <Wifi className="w-4 h-4 text-emerald-400 shrink-0" />
@@ -367,7 +351,7 @@ export function OllamaSetupModal({ onClose, onReady, initialStatus }: OllamaSetu
             </div>
           )}
 
-          {/* Not installed banner */}
+          {}
           {!isInstalled && !checking && (
             <div className="mt-2 flex items-start gap-2 bg-yellow-500/8 border border-yellow-500/20 rounded-xl px-4 py-3">
               <WifiOff className="w-4 h-4 text-yellow-400 shrink-0 mt-0.5" />
@@ -378,12 +362,12 @@ export function OllamaSetupModal({ onClose, onReady, initialStatus }: OllamaSetu
           )}
         </div>
 
-        {/* Install instructions (only when not installed) */}
+        {}
         {!isInstalled && (
           <div className="px-6 py-4 border-b border-white/[0.06]">
             <p className="text-[11px] text-white/30 uppercase tracking-widest font-semibold mb-3">Installation</p>
 
-            {/* Platform tabs */}
+            {}
             <div className="flex gap-1 mb-4 bg-white/[0.03] p-1 rounded-xl">
               {(['mac', 'linux', 'windows'] as Platform[]).map((p) => (
                 <button
@@ -414,7 +398,7 @@ export function OllamaSetupModal({ onClose, onReady, initialStatus }: OllamaSetu
           </div>
         )}
 
-        {/* Recheck / models info footer */}
+        {}
         <div className="px-6 py-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-[11px] text-white/25">
             <Terminal className="w-3.5 h-3.5" />
