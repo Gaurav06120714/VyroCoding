@@ -1,9 +1,5 @@
 'use client';
 
-/**
- * ExecutionFeed — live ticker showing when room participants run/submit code.
- * Appears as a floating strip at the bottom of the editor.
- */
 import { CheckCircle2, XCircle, Loader2, Zap } from 'lucide-react';
 import type { ExecutionFeedItem } from '@/hooks/useRoomWebSocket';
 
@@ -32,7 +28,6 @@ function statusLabel(status?: string) {
 export function ExecutionFeed({ items, currentUserId }: ExecutionFeedProps) {
   if (items.length === 0) return null;
 
-  // Show at most 3 recent items
   const visible = items.slice(0, 3);
 
   return (
