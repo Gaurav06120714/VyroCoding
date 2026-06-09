@@ -41,7 +41,7 @@ export default function LeaderboardPage() {
         </h1>
 
         <div className="lg-card overflow-hidden">
-          {/* Table header */}
+          {}
           <table className="w-full">
             <thead>
               <tr className="border-b border-white/[0.08]">
@@ -119,7 +119,7 @@ export default function LeaderboardPage() {
             </tbody>
           </table>
 
-          {/* Pagination */}
+          {}
           {total > 50 && (
             <div className="flex items-center justify-center gap-3 p-4 border-t border-white/[0.08]">
               <Button
