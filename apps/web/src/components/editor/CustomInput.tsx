@@ -12,7 +12,7 @@ interface CustomInputProps {
 export function CustomInput({ value, onChange, isOpen, onToggle }: CustomInputProps) {
   return (
     <div className="border-t border-white/[0.08] bg-[#0d1117] shrink-0">
-      {/* Header */}
+      {}
       <button
         onClick={onToggle}
         className="w-full h-8 flex items-center justify-between px-3 hover:bg-white/[0.03] transition-colors"
@@ -30,7 +30,7 @@ export function CustomInput({ value, onChange, isOpen, onToggle }: CustomInputPr
         )}
       </button>
 
-      {/* Textarea */}
+      {}
       {isOpen && (
         <textarea
           value={value}
