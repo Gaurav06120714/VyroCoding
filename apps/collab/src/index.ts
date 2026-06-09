@@ -1,7 +1,7 @@
 import http from 'http';
 import WebSocket, { WebSocketServer } from 'ws';
 import dotenv from 'dotenv';
-// eslint-disable-next-line @typescript-eslint/no-require-imports
+
 const { setupWSConnection } = require('y-websocket/bin/utils');
 
 dotenv.config();
@@ -16,8 +16,7 @@ const httpServer = http.createServer((_req, res) => {
 const wss = new WebSocketServer({ server: httpServer });
 
 wss.on('connection', (conn: WebSocket, req: http.IncomingMessage) => {
-  // URL pattern: /?roomId=<roomId>
-  // y-websocket uses the path or query param as the doc name
+  
   const url = new URL(req.url ?? '/', `http://localhost:${PORT}`);
   const roomId = url.searchParams.get('roomId') ?? url.pathname.replace('/', '');
 
@@ -28,7 +27,6 @@ wss.on('connection', (conn: WebSocket, req: http.IncomingMessage) => {
 
   console.log(`[collab] client connected to room: ${roomId}`);
 
-  // setupWSConnection handles all Yjs protocol, awareness, and document sync
   setupWSConnection(conn, req, {
     docName: `room:${roomId}`,
     gc: true,
