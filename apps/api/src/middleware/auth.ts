@@ -18,6 +18,6 @@ export async function optionalAuthenticate(
   try {
     await request.jwtVerify();
   } catch {
-    // Not authenticated — that's fine for optional auth
+    
   }
 }
