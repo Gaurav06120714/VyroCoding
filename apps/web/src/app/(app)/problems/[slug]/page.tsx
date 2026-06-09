@@ -17,19 +17,13 @@ import type { TestCaseResult } from '@/lib/api';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
-// ── Tab types ──────────────────────────────────────────────────────────────────
-
 type LeftTab = 'description' | 'submissions' | 'hints';
-
-// ── Difficulty colours ─────────────────────────────────────────────────────────
 
 const DIFF_BADGE: Record<string, string> = {
   easy:   'text-emerald-400 bg-emerald-400/10 border-emerald-400/20',
   medium: 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20',
   hard:   'text-red-400 bg-red-400/10 border-red-400/20',
 };
-
-// ── Starter code fallbacks ─────────────────────────────────────────────────────
 
 const FALLBACK_STARTERS: Record<number, string> = {
   93: 'function solution() {\n\n}\n',
@@ -40,8 +34,6 @@ const FALLBACK_STARTERS: Record<number, string> = {
   60: 'package main\n\nfunc main() {\n\n}\n',
   73: 'fn main() {\n\n}\n',
 };
-
-// ── Main Page ──────────────────────────────────────────────────────────────────
 
 export default function ProblemPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -66,7 +58,6 @@ export default function ProblemPage() {
 
   const codeLoadedRef = useRef(false);
 
-
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
     check();
@@ -74,11 +65,6 @@ export default function ProblemPage() {
     return () => window.removeEventListener('resize', check);
   }, []);
 
-  // react-resizable-panels v4 has a known SSR/hydration issue in Next.js 15:
-  // react-resizable-panels v4 SSR/hydration bug: the Group initialises before
-  // child Panels register, so defaultSize is ignored and panels collapse to ~5%.
-  // Poll every 30ms for 1.5s — catches the library's deferred layout write
-  // regardless of which rAF/microtask it happens in.
   useEffect(() => {
     if (loading) return;
 
@@ -104,7 +90,6 @@ export default function ProblemPage() {
       }
     };
 
-    // Poll repeatedly for 1.5 s so we catch however late the library writes.
     const intervalId = setInterval(applyFlex, 30);
     const stopId     = setTimeout(() => clearInterval(intervalId), 1500);
 
@@ -138,7 +123,7 @@ export default function ProblemPage() {
       if (starter) { setCode(starter); return; }
     }
     setCode(FALLBACK_STARTERS[language] ?? '');
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  
   }, [slug, language]);
 
   useEffect(() => {
@@ -148,7 +133,7 @@ export default function ProblemPage() {
     if (saved) { setCode(saved); return; }
     const starter = (problem.starterCode as Record<string, string>)?.[String(language)];
     setCode(starter ?? FALLBACK_STARTERS[language] ?? '');
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  
   }, [problem]);
 
   const handleRun = useCallback(async () => {
@@ -209,10 +194,9 @@ export default function ProblemPage() {
     }
   }, [code, language, problem, isRunning]);
 
-  // ── Loading ──────────────────────────────────────────────────────────────────
   if (loading) {
     return (
-      // h-full fills the parent <main> which is now h-full in the layout
+      
       <div className="h-full bg-[#0d1117] flex flex-col">
         <TopBar problem={null} language={language} onLanguageChange={setLanguage} languages={languages} isRunning={false} onRun={() => {}} onSubmit={() => {}} slug={slug} />
         <div className="flex-1 flex items-center justify-center">
@@ -234,14 +218,12 @@ export default function ProblemPage() {
     );
   }
 
-  // ── Mobile layout ────────────────────────────────────────────────────────────
-
   if (isMobile) {
     return (
       <div className="h-full bg-[#0d1117] flex flex-col overflow-hidden">
         <TopBar problem={problem} language={language} onLanguageChange={setLanguage} languages={languages} isRunning={isRunning} onRun={handleRun} onSubmit={handleSubmit} slug={slug} onAiChatClick={() => setAiChatOpen(true)} />
 
-        {/* Mobile tab switcher */}
+        {}
         <div className="flex border-b border-white/[0.07] bg-[#161b22] shrink-0">
           {(['problem', 'editor'] as const).map((v) => (
             <button
@@ -262,12 +244,12 @@ export default function ProblemPage() {
         </div>
 
         {mobileView === 'problem' ? (
-          /* Problem panel — independent scroll */
+          
           <div className="flex-1 overflow-hidden flex flex-col">
             <LeftPanel problem={problem} leftTab={leftTab} setLeftTab={setLeftTab} slug={slug} />
           </div>
         ) : (
-          /* Editor panel */
+          
           <div className="flex-1 flex flex-col overflow-hidden">
             <EditorToolbar language={language} onLanguageChange={setLanguage} />
             <div className="flex-1 overflow-hidden">
@@ -292,11 +274,8 @@ export default function ProblemPage() {
     );
   }
 
-  // ── Desktop layout ───────────────────────────────────────────────────────────
-
   return (
-    // h-full fills the parent <main> (which is h-full in layout.tsx)
-    // overflow-hidden prevents any child from causing layout-level scrollbars
+    
     <div className="h-full bg-[#0d1117] flex flex-col overflow-hidden">
       <TopBar
         problem={problem} language={language} onLanguageChange={setLanguage}
@@ -304,7 +283,7 @@ export default function ProblemPage() {
         onSubmit={handleSubmit} slug={slug} onAiChatClick={() => setAiChatOpen(true)}
       />
 
-      {/* Main workspace — fills all remaining height */}
+      {}
       <div className="flex-1 overflow-hidden min-h-0">
         <PanelGroup
           orientation="horizontal"
@@ -313,7 +292,7 @@ export default function ProblemPage() {
           defaultLayout={{ "problem-left": 38, "problem-right": 62 }}
         >
 
-          {/* ── Left: Problem statement ──────────────────────────────────── */}
+          {}
           <Panel id="problem-left" defaultSize={38} minSize={24} maxSize={60}>
             <div className="h-full overflow-hidden flex flex-col border-r border-white/[0.06] bg-[#0d1117]">
               <LeftPanel problem={problem} leftTab={leftTab} setLeftTab={setLeftTab} slug={slug} />
@@ -322,7 +301,7 @@ export default function ProblemPage() {
 
           <PanelResizeHandle className="w-[3px] bg-white/[0.03] hover:bg-[#00d4ff]/40 active:bg-[#00d4ff]/60 transition-colors cursor-col-resize shrink-0" />
 
-          {/* ── Right: Editor + Output ───────────────────────────────────── */}
+          {}
           <Panel id="problem-right" defaultSize={62} minSize={30}>
             <PanelGroup
               orientation="vertical"
@@ -331,11 +310,11 @@ export default function ProblemPage() {
               defaultLayout={{ "problem-editor": 65, "problem-output": 35 }}
             >
 
-              {/* Code editor pane */}
+              {}
               <Panel id="problem-editor" defaultSize={65} minSize={28}>
                 <div className="h-full flex flex-col overflow-hidden bg-[#0d1117]">
                   <EditorToolbar language={language} onLanguageChange={setLanguage} />
-                  {/* flex-1 min-h-0 is crucial — without min-h-0 flex children ignore overflow */}
+                  {}
                   <div className="flex-1 min-h-0 overflow-hidden">
                     <CodeEditor
                       value={code} onChange={setCode} language={language}
@@ -352,7 +331,7 @@ export default function ProblemPage() {
 
               <PanelResizeHandle className="h-[3px] bg-white/[0.03] hover:bg-[#00d4ff]/40 active:bg-[#00d4ff]/60 transition-colors cursor-row-resize shrink-0" />
 
-              {/* Output / test cases pane */}
+              {}
               <Panel id="problem-output" defaultSize={35} minSize={14}>
                 <div className="h-full overflow-hidden">
                   <OutputPanel result={result} testResults={testResults} isRunning={isRunning} />
@@ -374,8 +353,6 @@ export default function ProblemPage() {
   );
 }
 
-// ── TopBar ─────────────────────────────────────────────────────────────────────
-
 function TopBar({
   problem, language, onLanguageChange, languages, isRunning, onRun, onSubmit, slug: _slug, onAiChatClick,
 }: {
@@ -389,12 +366,12 @@ function TopBar({
   slug: string;
   onAiChatClick?: () => void;
 }) {
-  // suppress unused warning
+  
   void language; void onLanguageChange; void languages;
 
   return (
     <div className="h-12 bg-[#161b22] border-b border-white/[0.07] flex items-center justify-between px-4 shrink-0 gap-3">
-      {/* Left */}
+      {}
       <div className="flex items-center gap-2.5 min-w-0">
         <Link href="/problems" className="shrink-0 text-white/30 hover:text-white/60 transition-colors p-1 -ml-1 rounded-lg hover:bg-white/[0.05]">
           <ChevronLeft className="w-4 h-4" />
@@ -414,9 +391,9 @@ function TopBar({
         )}
       </div>
 
-      {/* Right */}
+      {}
       <div className="flex items-center gap-2 shrink-0">
-        {/* AI button */}
+        {}
         {onAiChatClick && (
           <button
             onClick={onAiChatClick}
@@ -427,10 +404,10 @@ function TopBar({
           </button>
         )}
 
-        {/* Divider */}
+        {}
         <div className="w-px h-5 bg-white/[0.08]" />
 
-        {/* Run */}
+        {}
         <button
           onClick={onRun}
           disabled={isRunning}
@@ -440,7 +417,7 @@ function TopBar({
           Run
         </button>
 
-        {/* Submit */}
+        {}
         <button
           onClick={onSubmit}
           disabled={isRunning}
@@ -455,8 +432,6 @@ function TopBar({
     </div>
   );
 }
-
-// ── LeftPanel ──────────────────────────────────────────────────────────────────
 
 function LeftPanel({
   problem, leftTab, setLeftTab, slug,
@@ -474,7 +449,7 @@ function LeftPanel({
 
   return (
     <>
-      {/* Tab bar — fixed height, never shrinks */}
+      {}
       <div className="flex items-center border-b border-white/[0.07] bg-[#0d1117] px-3 shrink-0 h-10 gap-0.5">
         {TABS.map((tab) => (
           <button
@@ -492,7 +467,7 @@ function LeftPanel({
         ))}
       </div>
 
-      {/* Scrollable content — min-h-0 is required for flex children to respect overflow */}
+      {}
       <div className="flex-1 min-h-0 overflow-y-auto">
         {leftTab === 'description' && (
           <div className="px-5 py-4 pb-8">
@@ -505,8 +480,6 @@ function LeftPanel({
     </>
   );
 }
-
-// ── HintsPanel ─────────────────────────────────────────────────────────────────
 
 function HintsPanel({ problem }: { problem: Problem }) {
   const [revealed, setRevealed] = useState<number[]>([]);
