@@ -29,7 +29,7 @@ const variantClasses: Record<BadgeVariant, string> = {
     'bg-ai-thinking text-canvas rounded-pill px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-[0.88px]',
   'ai-done':
     'bg-ai-done text-white rounded-pill px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-[0.88px]',
-  // legacy
+  
   purple:
     'bg-primary/15 text-primary-hover rounded-pill px-3 py-0.5 text-xs font-medium',
   blue:
