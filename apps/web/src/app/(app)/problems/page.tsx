@@ -39,8 +39,6 @@ const DIFF_COLORS: Record<string, string> = {
   hard:   'text-red-400',
 };
 
-// ── Skeleton row ───────────────────────────────────────────────────────────────
-
 function SkeletonRow() {
   return (
     <div className="flex items-center gap-4 px-6 py-4 border-b border-white/[0.04]">
@@ -56,8 +54,6 @@ function SkeletonRow() {
     </div>
   );
 }
-
-// ── Stats bar ──────────────────────────────────────────────────────────────────
 
 function StatsBar({ counts }: { counts: DifficultyCounts }) {
   const { easy, medium, hard } = counts;
@@ -79,8 +75,6 @@ function StatsBar({ counts }: { counts: DifficultyCounts }) {
     </div>
   );
 }
-
-// ── Main page ──────────────────────────────────────────────────────────────────
 
 export default function ProblemsPage() {
   const [problems, setProblems]         = useState<ProblemRow[]>([]);
@@ -134,7 +128,7 @@ export default function ProblemsPage() {
 
       <div className="max-w-6xl mx-auto px-6 py-10">
 
-        {/* ── Header ── */}
+        {}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-white mb-1">Problems</h1>
@@ -143,9 +137,9 @@ export default function ProblemsPage() {
           {!loading && <StatsBar counts={difficultyCounts} />}
         </div>
 
-        {/* ── Filters ── */}
+        {}
         <div className="flex flex-col sm:flex-row gap-3 mb-5">
-          {/* Search */}
+          {}
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/25" />
             <input
@@ -157,7 +151,7 @@ export default function ProblemsPage() {
             />
           </div>
 
-          {/* Difficulty pills */}
+          {}
           <div className="flex items-center gap-1.5">
             {DIFFICULTY_FILTERS.map(({ value, label }) => (
               <button
@@ -176,10 +170,10 @@ export default function ProblemsPage() {
           </div>
         </div>
 
-        {/* ── Table ── */}
+        {}
         <div className="rounded-2xl border border-white/[0.07] overflow-hidden bg-surface1/80">
 
-          {/* Header row */}
+          {}
           <div className="grid grid-cols-[40px_32px_1fr_90px_auto_70px] items-center gap-4 px-6 py-3 border-b border-white/[0.07] bg-white/[0.02]">
             <span className="text-[10px] font-semibold uppercase tracking-widest text-white/25">#</span>
             <span className="text-[10px] font-semibold uppercase tracking-widest text-white/25"></span>
@@ -189,7 +183,7 @@ export default function ProblemsPage() {
             <span className="text-[10px] font-semibold uppercase tracking-widest text-white/25 text-right">Acceptance</span>
           </div>
 
-          {/* Body */}
+          {}
           {loading ? (
             Array.from({ length: 12 }).map((_, i) => <SkeletonRow key={i} />)
           ) : problems.length === 0 ? (
@@ -209,12 +203,12 @@ export default function ProblemsPage() {
                 href={`/problems/${p.slug}`}
                 className="grid grid-cols-[40px_32px_1fr_90px_auto_70px] items-center gap-4 px-6 py-3.5 border-b border-white/[0.04] last:border-0 hover:bg-white/[0.03] transition-colors group"
               >
-                {/* Index */}
+                {}
                 <span className="text-[12px] text-white/25 font-mono tabular-nums">
                   {(page - 1) * 50 + idx + 1}
                 </span>
 
-                {/* Solved indicator */}
+                {}
                 <div className="flex items-center justify-center">
                   {p.solved ? (
                     <CheckCircle2 className="w-4 h-4 text-emerald-500/70" />
@@ -223,17 +217,17 @@ export default function ProblemsPage() {
                   )}
                 </div>
 
-                {/* Title */}
+                {}
                 <span className="text-[13px] font-medium text-white/85 group-hover:text-white transition-colors truncate">
                   {p.title}
                 </span>
 
-                {/* Difficulty */}
+                {}
                 <span className={`text-[12px] font-semibold ${DIFF_COLORS[p.difficulty] ?? 'text-white/50'}`}>
                   {p.difficulty.charAt(0).toUpperCase() + p.difficulty.slice(1)}
                 </span>
 
-                {/* Tags */}
+                {}
                 <div className="hidden md:flex gap-1.5 flex-wrap max-w-[240px]">
                   {p.tags.slice(0, 2).map((tag) => (
                     <span
@@ -248,7 +242,7 @@ export default function ProblemsPage() {
                   )}
                 </div>
 
-                {/* Acceptance */}
+                {}
                 <span className="text-[12px] text-white/35 font-mono tabular-nums text-right">
                   {p.acceptanceRate.toFixed(0)}%
                 </span>
@@ -257,7 +251,7 @@ export default function ProblemsPage() {
           )}
         </div>
 
-        {/* ── Pagination ── */}
+        {}
         {totalPages > 1 && (
           <div className="flex items-center justify-center gap-2 mt-6">
             <button
