@@ -33,7 +33,6 @@ const DIFFICULTY_COLOR: Record<string, string> = {
   hard:   'bg-[#ef4444]',
 };
 
-// Deterministic color from userId
 const CURSOR_COLORS = ['#00d4ff','#4ade80','#f59e0b','#f472b6','#22d3ee','#a78bfa','#fb923c','#34d399'];
 function userColor(uid: string) {
   let h = 0;
@@ -74,7 +73,6 @@ export default function RoomPage() {
 
   const myColor = user ? userColor(user.id) : '#00d4ff';
 
-  // ── Phase 2: WebSocket hook ───────────────────────────────────────────────
   const {
     wsStatus,
     wsRef,
@@ -125,13 +123,11 @@ export default function RoomPage() {
     },
   });
 
-  // ── Voice chat (uses upgraded wsRef from hook) ────────────────────────────
   const {
     inVoice, micMuted, participants: voiceParticipants, micError,
     joinVoice, leaveVoice, toggleMute,
   } = useVoiceChat(id, user?.id ?? '', user?.username ?? '', wsRef.current);
 
-  // ── Load problem ──────────────────────────────────────────────────────────
   const loadProblem = useCallback(async (slugOrId: string) => {
     try {
       const { problemsApi } = await import('@/lib/api');
@@ -144,7 +140,6 @@ export default function RoomPage() {
     }
   }, [language]);
 
-  // ── Initial room load ─────────────────────────────────────────────────────
   useEffect(() => {
     roomsApi.get(id).then(async (res) => {
       setRoom(res.data);
@@ -160,15 +155,13 @@ export default function RoomPage() {
       }
       setLoading(false);
     }).catch(() => setLoading(false));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  
   }, [id]);
 
-  // ── Sync language change ──────────────────────────────────────────────────
   useEffect(() => {
     if (problem) setCode(problem.starterCode[language] ?? '');
   }, [language, problem]);
 
-  // ── Measure editor container for cursor overlay ───────────────────────────
   useEffect(() => {
     if (!editorContainerRef.current) return;
     const observer = new ResizeObserver(([entry]) => {
@@ -178,12 +171,11 @@ export default function RoomPage() {
     return () => observer.disconnect();
   }, []);
 
-  // ── Code change: sync + send cursor + typing indicator ───────────────────
   const handleCodeChange = useCallback((newCode: string) => {
     setCode(newCode);
     sendCode(newCode);
     sendTyping(true);
-    // Clear typing indicator after 1s of inactivity
+    
     clearTimeout((handleCodeChange as { _t?: ReturnType<typeof setTimeout> })._t);
     (handleCodeChange as { _t?: ReturnType<typeof setTimeout> })._t = setTimeout(
       () => sendTyping(false), 1000
@@ -264,7 +256,7 @@ export default function RoomPage() {
         setResult(executionResult);
 
         if (subRes.data.status === 'accepted' && user) {
-          // Backend broadcast handles room notification via BullMQ queue
+          
           addToast({ message: `You solved ${problem.title}!`, type: 'success', icon: '🎉' });
         }
       };
@@ -281,7 +273,6 @@ export default function RoomPage() {
     }
   }, [id, room, user, addToast]);
 
-  // ── Loading / not found ───────────────────────────────────────────────────
   if (loading) {
     return (
       <div className="h-screen flex items-center justify-center bg-canvas">
@@ -319,10 +310,10 @@ export default function RoomPage() {
         onTimerEnd={handleTimerEnd}
       />
 
-      {/* 3-panel layout */}
+      {}
       <div className="flex-1 flex overflow-hidden">
 
-        {/* LEFT — problem list + problem description (30%) */}
+        {}
         <div className="w-[30%] min-w-[260px] bg-surface1 border-r border-hairline flex flex-col overflow-hidden">
           <div className="flex border-b border-hairline shrink-0">
             {(['problems', 'problem', 'output'] as const).map((tab) => (
@@ -398,11 +389,11 @@ export default function RoomPage() {
           </div>
         </div>
 
-        {/* CENTER — editor (50%) */}
+        {}
         <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Editor toolbar */}
+          {}
           <div className="h-10 bg-[#161b22] border-b border-white/[0.08] flex items-center justify-between px-3 shrink-0">
-            {/* Left: language selector + presence */}
+            {}
             <div className="flex items-center gap-2 flex-1 min-w-0">
               <div className="relative">
                 <button
@@ -427,7 +418,7 @@ export default function RoomPage() {
                 )}
               </div>
 
-              {/* Presence bar */}
+              {}
               <PresenceBar
                 users={presenceUsers}
                 currentUserId={user?.id ?? ''}
@@ -437,7 +428,7 @@ export default function RoomPage() {
               />
             </div>
 
-            {/* Right: reaction + run/submit */}
+            {}
             <div className="flex items-center gap-2 shrink-0">
               <ReactionOverlay reactions={reactions} onSendReaction={sendReaction} />
               <button
@@ -459,7 +450,7 @@ export default function RoomPage() {
             </div>
           </div>
 
-          {/* Monaco editor + live cursors overlay */}
+          {}
           <div ref={editorContainerRef} className="flex-1 overflow-hidden relative">
             <CodeEditor
               value={code}
@@ -473,7 +464,7 @@ export default function RoomPage() {
           </div>
         </div>
 
-        {/* RIGHT — chat / users / scoreboard (20%) */}
+        {}
         <div className="w-[20%] min-w-[200px] bg-surface1 border-l border-hairline flex flex-col overflow-hidden">
           <div className="flex border-b border-hairline shrink-0">
             {(['chat', 'users', 'scoreboard'] as const).map((tab) => (
