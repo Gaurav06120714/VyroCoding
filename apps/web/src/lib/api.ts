@@ -42,15 +42,13 @@ async function request<T>(
       const json = await response.json() as { error?: string; message?: string };
       message = json.error ?? json.message ?? message;
     } catch {
-      // ignore parse error
+      
     }
     throw new Error(message);
   }
 
   return response.json() as Promise<T>;
 }
-
-// ─── Auth ──────────────────────────────────────────────────────────────────
 
 export const authApi = {
   register: (body: { username: string; email: string; password: string }) =>
@@ -66,8 +64,6 @@ export const authApi = {
   me: () =>
     request<{ data: { id: string; username: string; email: string; rating: number; problemsSolved: number } }>('/auth/me'),
 };
-
-// ─── Problems ────────────────────────────────────────────────────────────────
 
 export const problemsApi = {
   list: (params?: { difficulty?: string; tag?: string; search?: string; page?: number; pageSize?: number }) =>
@@ -88,8 +84,6 @@ export const problemsApi = {
   get: (slug: string) =>
     request<{ data: import('@vyro/types').Problem }>(`/problems/${slug}`),
 };
-
-// ─── Rooms ────────────────────────────────────────────────────────────────────
 
 export const roomsApi = {
   list: (params?: { status?: string }) =>
@@ -112,8 +106,6 @@ export const roomsApi = {
   problems: (id: string) =>
     request<{ data: Array<{ id: string; slug: string; title: string; difficulty: string }> }>(`/rooms/${id}/problems`),
 };
-
-// ─── Execute ────────────────────────────────────────────────────────────────
 
 export const executeApi = {
   run: (body: import('@vyro/types').ExecuteRequest) =>
@@ -139,8 +131,6 @@ export const executeApi = {
     }>(`/execute/submissions/${id}`),
 };
 
-// ─── Leaderboard ───────────────────────────────────────────────────────────
-
 export const leaderboardApi = {
   global: (params?: { page?: number; pageSize?: number }) =>
     request<{ data: { items: import('@vyro/types').LeaderboardEntry[]; total: number } }>(
@@ -148,8 +138,6 @@ export const leaderboardApi = {
       { params: params as Record<string, string | number | boolean> }
     ),
 };
-
-// ─── Contests ────────────────────────────────────────────────────────────────
 
 export const contestsApi = {
   list: () =>
@@ -161,8 +149,6 @@ export const contestsApi = {
   join: (id: string) =>
     request<{ data: { joined: boolean } }>(`/contests/${id}/join`, { method: 'POST' }),
 };
-
-// ─── Users ───────────────────────────────────────────────────────────────────
 
 export interface UserProfile {
   id: string;
@@ -190,8 +176,6 @@ export const usersApi = {
     request<{ data: UserProfile }>(`/users/${username}`),
 };
 
-// ─── Problem submissions ──────────────────────────────────────────────────────
-
 export interface ProblemSubmission {
   id: string;
   status: string;
@@ -206,8 +190,6 @@ export const submissionsApi = {
   forProblem: (slug: string) =>
     request<{ data: ProblemSubmission[] }>(`/problems/${slug}/submissions`),
 };
-
-// ─── Room active problem ──────────────────────────────────────────────────────
 
 export const roomsApi2 = {
   setActiveProblem: (roomId: string, problemId: string) =>
@@ -239,8 +221,6 @@ export const roomsApi2 = {
     }),
 };
 
-// ─── Execute run-all ──────────────────────────────────────────────────────────
-
 export interface TestCaseResult {
   input: string;
   expectedOutput: string;
@@ -257,8 +237,6 @@ export const executeApiExt = {
       body: JSON.stringify(body),
     }),
 };
-
-// ─── Admin ────────────────────────────────────────────────────────────────────
 
 export const adminApi = {
   stats: () =>
@@ -287,8 +265,6 @@ export const adminApi = {
     request<{ data: Array<{ id: string; status: string; language_id: number; created_at: string; username: string; problem_title: string }> }>('/admin/submissions'),
 };
 
-// ─── Languages ───────────────────────────────────────────────────────────────
-
 export interface LanguageEntry {
   id: number;
   name: string;
@@ -301,23 +277,15 @@ export const languagesApi = {
   list: () => request<{ data: LanguageEntry[] }>('/languages'),
 };
 
-// ─── Auth extras ─────────────────────────────────────────────────────────────
-
 export const authApiExt = {
-  /**
-   * Initiate a password reset.
-   *
-   * Production: always returns `{ message }` (email sent silently).
-   * Dev mode (no RESEND_API_KEY): also returns `resetToken` + `resetLink`
-   *   so developers can test the flow without email credentials.
-   */
+  
   forgotPassword: (email: string) =>
     request<{
       data: {
         message: string;
-        /** Dev-mode only — raw 64-hex token */
+        
         resetToken?: string;
-        /** Dev-mode only — full reset URL */
+        
         resetLink?: string;
       };
     }>('/auth/forgot-password', {
@@ -325,28 +293,18 @@ export const authApiExt = {
       body: JSON.stringify({ email }),
     }),
 
-  /**
-   * Complete a password reset using the raw token from the email link.
-   * Throws on invalid / expired token.
-   */
   resetPassword: (token: string, newPassword: string) =>
     request<{ data: { message: string } }>('/auth/reset-password', {
       method: 'POST',
       body: JSON.stringify({ token, newPassword }),
     }),
 
-  /**
-   * Change password for the currently authenticated user.
-   * Requires a valid JWT in the Authorization header.
-   */
   changePassword: (currentPassword: string, newPassword: string) =>
     request<{ data: { message: string } }>('/auth/change-password', {
       method: 'POST',
       body: JSON.stringify({ currentPassword, newPassword }),
     }),
 };
-
-// ─── Ollama / AI ──────────────────────────────────────────────────────────────
 
 export interface OllamaModel {
   name: string;
@@ -375,6 +333,5 @@ export const aiApi = {
       method: 'POST',
     }),
 
-  /** SSE stream — full zero-click auto-setup (start daemon + pull model). Use fetch() directly. */
   ollamaAutoSetupUrl: (apiBase: string) => `${apiBase}/ai/ollama/auto-setup`,
 };
