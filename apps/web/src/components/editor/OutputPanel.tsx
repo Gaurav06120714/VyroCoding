@@ -16,8 +16,6 @@ interface OutputPanelProps {
   problemSlug?: string;
 }
 
-// ── Status helpers ─────────────────────────────────────────────────────────────
-
 function getStatusConfig(status?: SubmissionStatus) {
   switch (status) {
     case SubmissionStatus.Accepted:
@@ -39,8 +37,6 @@ function getStatusConfig(status?: SubmissionStatus) {
   }
 }
 
-// ── Running skeleton ───────────────────────────────────────────────────────────
-
 function RunningView() {
   return (
     <div className="flex flex-col items-center justify-center h-full gap-3 text-white/40">
@@ -56,8 +52,6 @@ function RunningView() {
   );
 }
 
-// ── Empty state ────────────────────────────────────────────────────────────────
-
 function EmptyView() {
   return (
     <div className="flex flex-col items-center justify-center h-full gap-2 text-white/25">
@@ -68,8 +62,6 @@ function EmptyView() {
   );
 }
 
-// ── Output tab ─────────────────────────────────────────────────────────────────
-
 function OutputView({ result }: { result: ExecutionResult }) {
   const cfg = getStatusConfig(result.submissionStatus);
   const hasOutput = result.stdout?.trim();
@@ -77,7 +69,7 @@ function OutputView({ result }: { result: ExecutionResult }) {
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      {/* Status bar */}
+      {}
       <div className={`flex items-center justify-between px-4 py-2 border-b ${cfg.bg} shrink-0`}>
         <div className={`flex items-center gap-2 text-sm font-semibold ${cfg.color}`}>
           {cfg.icon}
@@ -97,7 +89,7 @@ function OutputView({ result }: { result: ExecutionResult }) {
         </div>
       </div>
 
-      {/* Console output */}
+      {}
       <div className="flex-1 overflow-y-auto p-4 space-y-3 font-mono text-xs">
         {!hasOutput && !hasError && (
           <p className="text-white/25 italic">No output produced.</p>
@@ -134,8 +126,6 @@ function OutputView({ result }: { result: ExecutionResult }) {
   );
 }
 
-// ── Test Cases tab ─────────────────────────────────────────────────────────────
-
 function TestCasesView({ testResults }: { testResults: TestCaseResult[] }) {
   const [expanded, setExpanded] = useState<number | null>(0);
   const passed = testResults.filter((t) => t.passed).length;
@@ -144,7 +134,7 @@ function TestCasesView({ testResults }: { testResults: TestCaseResult[] }) {
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      {/* Summary bar */}
+      {}
       <div className={`flex items-center gap-2 px-4 py-2 border-b shrink-0 ${allPassed ? 'bg-[#10b981]/10 border-[#10b981]/20' : 'bg-[#e5534b]/10 border-[#e5534b]/20'}`}>
         {allPassed
           ? <CheckCircle2 className="w-4 h-4 text-[#10b981]" />
@@ -154,7 +144,7 @@ function TestCasesView({ testResults }: { testResults: TestCaseResult[] }) {
         </span>
       </div>
 
-      {/* Cases list */}
+      {}
       <div className="flex-1 overflow-y-auto p-3 space-y-2">
         {testResults.map((tc, i) => (
           <div
@@ -214,15 +204,12 @@ function TestCasesView({ testResults }: { testResults: TestCaseResult[] }) {
   );
 }
 
-// ── Main OutputPanel ──────────────────────────────────────────────────────────
-
 type TabId = 'output' | 'testcases';
 
 export function OutputPanel({ result, testResults, isRunning, problemSlug: _problemSlug }: OutputPanelProps) {
   const hasTestResults = testResults && testResults.length > 0;
   const [activeTab, setActiveTab] = useState<TabId>('output');
 
-  // Auto-switch to test-cases tab when run-all results come in
   const displayTab = hasTestResults ? 'testcases' : activeTab;
 
   const tabs: { id: TabId; label: string; icon: React.ReactNode }[] = [
@@ -232,7 +219,7 @@ export function OutputPanel({ result, testResults, isRunning, problemSlug: _prob
 
   return (
     <div className="flex flex-col h-full bg-[#0d1117] overflow-hidden">
-      {/* Tab bar */}
+      {}
       <div className="flex items-center border-b border-white/[0.08] px-2 shrink-0 h-9">
         {tabs.map((tab) => {
           const isActive = displayTab === tab.id;
@@ -262,7 +249,7 @@ export function OutputPanel({ result, testResults, isRunning, problemSlug: _prob
         })}
       </div>
 
-      {/* Content */}
+      {}
       <div className="flex-1 overflow-hidden">
         {isRunning ? (
           <RunningView />
