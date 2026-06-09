@@ -1,64 +1,37 @@
-/**
- * Centralized environment configuration for VyroCoding API.
- *
- * All process.env access MUST go through this module.
- * Never read process.env directly in route/service files — import from here.
- *
- * Validates required variables at startup so the server fails fast with a
- * clear message rather than crashing with an obscure runtime error later.
- *
- * Usage:
- *   import { env } from '../config/env.js';
- *   const db = new Pool({ connectionString: env.DATABASE_URL });
- */
-
 import 'dotenv/config';
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-
 interface Env {
-  // Runtime
+  
   NODE_ENV: 'development' | 'staging' | 'production' | 'test';
   LOG_LEVEL: string;
 
-  // Server
   API_PORT: number;
   API_HOST: string;
-  CORS_ORIGIN: string[];  // parsed from comma-separated string
+  CORS_ORIGIN: string[];  
 
-  // Database
   DATABASE_URL: string;
 
-  // Redis
   REDIS_URL: string;
 
-  // Auth / JWT
   JWT_SECRET: string;
   JWT_EXPIRES_IN: string;
 
-  // Proxy / Rate limiting
   PROXY_DEPTH: number;
   IP_HASH_SALT: string;
 
-  // Judge0 (code execution)
   JUDGE0_API_URL: string;
   JUDGE0_API_KEY: string;
 
-  // Collab (Y.js WebSocket)
   COLLAB_PORT: number;
 
-  // AI — DeepSeek v4 Pro via NVIDIA NIM (OpenAI-compatible API)
   NVIDIA_API_KEY: string;
   NVIDIA_BASE_URL: string;
   AI_MODEL: string;
 
-  // Email (Resend) — optional in dev, required in production
-  RESEND_API_KEY: string;      // re_... from resend.com; empty = dev mode (no emails sent)
-  EMAIL_FROM: string;          // e.g. "VyroCoding <noreply@yourdomain.com>"
-  APP_URL: string;             // e.g. https://vyrocoding.com — used in reset links
+  RESEND_API_KEY: string;      
+  EMAIL_FROM: string;          
+  APP_URL: string;             
 }
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function required(name: string): string {
   const value = process.env[name];
@@ -87,8 +60,6 @@ function parseOrigins(raw: string | undefined): string[] {
   if (!raw) return ['http://localhost:3000', 'http://localhost:5173'];
   return raw.split(',').map((o) => o.trim()).filter(Boolean);
 }
-
-// ── Production-safety checks ─────────────────────────────────────────────────
 
 function validateProductionConfig(parsed: Env): void {
   if (parsed.NODE_ENV !== 'production') return;
@@ -121,13 +92,9 @@ function validateProductionConfig(parsed: Env): void {
   }
 }
 
-// ── Parse and export ──────────────────────────────────────────────────────────
-
 function buildEnv(): Env {
   const nodeEnv = optional('NODE_ENV', 'development') as Env['NODE_ENV'];
 
-  // In production, JWT_SECRET is required.
-  // In dev/test, we warn but allow missing (using the random-per-boot fallback set in index.ts).
   const jwtSecret =
     nodeEnv === 'production'
       ? required('JWT_SECRET')
