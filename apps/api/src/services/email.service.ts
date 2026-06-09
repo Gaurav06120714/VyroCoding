@@ -1,16 +1,3 @@
-/**
- * Email service — password reset emails via Resend.
- *
- * In development (RESEND_API_KEY unset) emails are skipped and the
- * raw reset link is returned from the /forgot-password route so devs
- * can test the flow without any email credentials.
- *
- * In production set:
- *   RESEND_API_KEY=re_...
- *   EMAIL_FROM=noreply@yourdomain.com
- *   APP_URL=https://yourdomain.com
- */
-
 import { Resend } from 'resend';
 import { env } from '../config/env.js';
 
@@ -22,15 +9,12 @@ function getResend(): Resend | null {
   return resendClient;
 }
 
-// ── Password reset email ──────────────────────────────────────────────────────
-
 export async function sendPasswordResetEmail(
   toEmail: string,
   resetLink: string,
 ): Promise<{ sent: boolean; previewLink?: string }> {
   const resend = getResend();
 
-  // Dev mode: skip email, return the link for use in the API response
   if (!resend) {
     console.log(`[email] DEV — password reset link for ${toEmail}:\n  ${resetLink}`);
     return { sent: false, previewLink: resetLink };
@@ -46,15 +30,12 @@ export async function sendPasswordResetEmail(
 
   if (error) {
     console.error('[email] Failed to send password reset email:', error);
-    // Don't throw — caller still returns the "check your email" message;
-    // logging is sufficient so ops can see the failure.
+    
     return { sent: false };
   }
 
   return { sent: true };
 }
-
-// ── HTML template ─────────────────────────────────────────────────────────────
 
 function buildResetEmailHtml(resetLink: string): string {
   return `<!DOCTYPE html>
