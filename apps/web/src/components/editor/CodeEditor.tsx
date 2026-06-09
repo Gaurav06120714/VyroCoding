@@ -32,7 +32,7 @@ interface CodeEditorProps {
   onRun?: () => void;
   onSubmit?: () => void;
   problemSlug?: string;
-  /** Called with (line, column) on cursor position change — used for live cursors */
+  
   onCursorChange?: (line: number, column: number) => void;
 }
 
@@ -51,21 +51,17 @@ export function CodeEditor({
   const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
   const monacoLang = LANGUAGE_MONACO_MAP[language] ?? 'javascript';
 
-  // LocalStorage key per problem per language
   const storageKey = problemSlug ? `vyro-code-${problemSlug}-${language}` : null;
 
-  // Restore code from localStorage on mount / when language changes
   useEffect(() => {
     if (!storageKey) return;
     const saved = localStorage.getItem(storageKey);
     if (saved && saved !== value) {
       onChange(saved);
     }
-    // Only run on storageKey change (language/slug change)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [storageKey]);
 
-  // Auto-save to localStorage whenever value changes
   useEffect(() => {
     if (!storageKey || !value) return;
     const timer = setTimeout(() => {
@@ -85,19 +81,16 @@ export function CodeEditor({
     (editor: Monaco.editor.IStandaloneCodeEditor, monaco: typeof Monaco) => {
       editorRef.current = editor;
 
-      // Ctrl+Enter / Cmd+Enter → Run
       editor.addCommand(
         monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter,
         () => { onRun?.(); }
       );
 
-      // Ctrl+Shift+Enter / Cmd+Shift+Enter → Submit
       editor.addCommand(
         monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.Enter,
         () => { onSubmit?.(); }
       );
 
-      // Cursor position → broadcast for live cursors
       if (onCursorChange) {
         editor.onDidChangeCursorPosition((e) => {
           onCursorChange(e.position.lineNumber, e.position.column);
