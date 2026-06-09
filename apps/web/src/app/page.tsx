@@ -32,7 +32,7 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-canvas text-white overflow-x-hidden">
 
-      {/* ── Navbar ─────────────────────────────────────────────────────── */}
+      {}
       <nav className={`fixed top-0 left-0 right-0 z-50 h-14 flex items-center justify-between px-8 transition-all duration-300 ${scrolled ? 'lg-bar' : 'bg-transparent'}`}>
         <div className="flex items-center gap-2.5">
           <div className="lg-btn-primary flex items-center justify-center w-7 h-7 !px-0 !rounded-[9px]">
@@ -53,7 +53,7 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      {/* ── Hero ───────────────────────────────────────────────────────── */}
+      {}
       <section className="relative pt-36 pb-24 px-4 text-center overflow-hidden">
         <div className="relative max-w-4xl mx-auto">
           <h1 className="font-extrabold leading-[1.0] tracking-[-0.05em] text-white mb-6" style={{ fontSize: 'var(--text-hero)' }}>
@@ -73,7 +73,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── IDE mockup ─────────────────────────────────────────────────── */}
+      {}
       <div className="max-w-5xl mx-auto px-4 pb-20">
         <div className="lg p-5">
           <div className="flex items-center gap-1.5 mb-4">
@@ -114,10 +114,10 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* ── Execution result proof ─────────────────────────────────── */}
+      {}
       <div className="mx-4 max-w-5xl md:mx-auto mb-0">
         <div className="lg-card rounded-[18px] overflow-hidden">
-          {/* Terminal bar */}
+          {}
           <div className="flex items-center gap-2 px-4 h-9 border-b border-white/[0.06] bg-white/[0.02]">
             <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f57]/70" />
             <span className="w-2.5 h-2.5 rounded-full bg-[#febc2e]/70" />
@@ -127,7 +127,7 @@ export default function LandingPage() {
               <span className="w-1.5 h-1.5 rounded-full bg-easy" />Accepted
             </span>
           </div>
-          {/* Result grid */}
+          {}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-0 divide-x divide-white/[0.06]">
             {[
               { label: 'Problem', value: 'Valid Parentheses', sub: 'Easy · Stack' },
@@ -142,7 +142,7 @@ export default function LandingPage() {
               </div>
             ))}
           </div>
-          {/* Submission bar */}
+          {}
           <div className="border-t border-white/[0.06] px-6 py-3 flex items-center gap-4 bg-white/[0.01]">
             <span className="text-[11px] text-white/25 font-mono">JavaScript · submitted 2 min ago</span>
             <div className="flex gap-1.5 ml-auto">
@@ -155,7 +155,7 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* ── Feature bento grid ─────────────────────────────────────────── */}
+      {}
       <section className="py-24 max-w-6xl mx-auto px-4">
         <p className="text-[13px] font-medium uppercase tracking-[0.4px] text-white/40 text-center mb-3">What&apos;s included</p>
         <h2 className="font-bold tracking-[-0.04em] text-white text-center mb-12" style={{ fontSize: 'var(--text-3xl)' }}>
@@ -228,7 +228,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── CTA banner ─────────────────────────────────────────────────── */}
+      {}
       <section className="py-24 max-w-6xl mx-auto px-4">
         <div className="lg-strong p-12 text-center">
           <h2 className="font-bold tracking-[-0.04em] text-white mb-4" style={{ fontSize: 'var(--text-2xl)' }}>
@@ -243,7 +243,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Footer ─────────────────────────────────────────────────────── */}
+      {}
       <footer className="border-t border-white/[0.06] py-10 px-8">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center justify-center gap-6 mb-8">
