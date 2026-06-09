@@ -257,7 +257,7 @@ export default function RoomsPage() {
               return (
                 <div key={room.id} className="lg-card p-6 flex flex-col">
 
-                  {/* Header */}
+                  {}
                   <div className="flex items-start justify-between mb-1">
                     <h3 className="text-lg font-semibold text-white truncate flex-1 mr-2">{room.name}</h3>
                     <div className="flex items-center gap-1.5 shrink-0">
@@ -278,12 +278,12 @@ export default function RoomsPage() {
                     </div>
                   </div>
 
-                  {/* Host */}
+                  {}
                   <p className="text-xs text-white/35 mb-3">
                     Host: <span className="text-white/55">{room.host?.username ?? '—'}</span>
                   </p>
 
-                  {/* Problem set summary */}
+                  {}
                   <button
                     onClick={() => setPreviewRoom({ id: room.id, name: room.name })}
                     className="flex items-center gap-1.5 text-xs text-[#00d4ff]/70 hover:text-[#00d4ff] transition-colors mb-4 w-fit"
@@ -292,7 +292,7 @@ export default function RoomsPage() {
                     10 problems · 5E · 3M · 2H
                   </button>
 
-                  {/* Footer */}
+                  {}
                   <div className="flex items-center justify-between mt-auto mb-3">
                     <span className="text-xs text-white/40">
                       {room.participantCount ?? 0} / {room.maxParticipants} online
