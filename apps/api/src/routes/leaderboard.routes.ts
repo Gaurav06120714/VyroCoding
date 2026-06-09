@@ -3,7 +3,7 @@ import { query } from '../db/client.js';
 import { cacheGet, cacheSet } from '../services/redis.service.js';
 
 export async function leaderboardRoutes(fastify: FastifyInstance): Promise<void> {
-  // GET /leaderboard — global leaderboard
+  
   fastify.get<{ Querystring: { page?: string; pageSize?: string } }>(
     '/',
     async (request, reply) => {
