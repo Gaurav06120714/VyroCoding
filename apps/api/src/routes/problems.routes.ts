@@ -40,7 +40,7 @@ function toPublicProblem(row: DbProblem): Problem {
 }
 
 export async function problemsRoutes(fastify: FastifyInstance): Promise<void> {
-  // GET /problems  — list with optional filters
+  
   fastify.get<{
     Querystring: {
       difficulty?: string;
@@ -73,7 +73,6 @@ export async function problemsRoutes(fastify: FastifyInstance): Promise<void> {
 
     const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
-    // Cache key based on all query params
     const listCacheKey = `problems:list:${difficulty ?? 'all'}:${tag ?? ''}:${search ?? ''}:${page}:${pageSize}`;
     const cached = await cacheGet<{ items: unknown[]; total: number; page: number; pageSize: number; hasMore: boolean }>(listCacheKey);
     if (cached) return reply.send({ data: cached });
@@ -107,13 +106,12 @@ export async function problemsRoutes(fastify: FastifyInstance): Promise<void> {
       pageSize: parseInt(pageSize, 10),
       hasMore: offset + rows.length < total,
     };
-    // Cache for 60 seconds
+    
     await cacheSet(listCacheKey, responseData, 60);
 
     return reply.send({ data: responseData });
   });
 
-  // GET /problems/:slug
   fastify.get<{ Params: { slug: string } }>('/:slug', async (request, reply) => {
     const { slug } = request.params;
 
@@ -137,7 +135,6 @@ export async function problemsRoutes(fastify: FastifyInstance): Promise<void> {
     return reply.send({ data: problem });
   });
 
-  // GET /problems/:slug/submissions — user's submissions for this problem (auth required)
   fastify.get<{ Params: { slug: string } }>(
     '/:slug/submissions',
     { preHandler: authenticate },
