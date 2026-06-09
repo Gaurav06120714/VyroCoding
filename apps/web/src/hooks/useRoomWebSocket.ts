@@ -1,14 +1,7 @@
 'use client';
 
-/**
- * useRoomWebSocket — Phase 2 comprehensive WebSocket hook.
- * Handles: code-sync, cursor positions, typing, presence, chat,
- * execution streaming, submission results, voice signaling, reactions.
- */
 import { useEffect, useRef, useState, useCallback } from 'react';
 import type { ChatMessage } from '@vyro/types';
-
-// ── Types ─────────────────────────────────────────────────────────────────────
 
 export interface RemoteCursor {
   userId: string;
@@ -88,8 +81,6 @@ export interface UseRoomWebSocketReturn {
   clearFeedItem: (id: string) => void;
 }
 
-// ── Color palette for cursors ─────────────────────────────────────────────────
-
 const CURSOR_COLORS = [
   '#00d4ff', '#4ade80', '#f59e0b', '#f472b6',
   '#22d3ee', '#a78bfa', '#fb923c', '#34d399',
@@ -102,8 +93,6 @@ function getUserColor(userId: string): string {
   }
   return CURSOR_COLORS[Math.abs(hash) % CURSOR_COLORS.length];
 }
-
-// ── Hook ──────────────────────────────────────────────────────────────────────
 
 export function useRoomWebSocket(opts: UseRoomWebSocketOptions): UseRoomWebSocketReturn {
   const {
@@ -127,14 +116,12 @@ export function useRoomWebSocket(opts: UseRoomWebSocketOptions): UseRoomWebSocke
 
   const myColor = color ?? getUserColor(userId);
 
-  // ── Send helper ───────────────────────────────────────────────────────────
   const send = useCallback((data: object) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify(data));
     }
   }, []);
 
-  // ── Public senders ────────────────────────────────────────────────────────
   const sendCode = useCallback((code: string) => {
     if (codeDebounce.current) clearTimeout(codeDebounce.current);
     codeDebounce.current = setTimeout(() => {
@@ -178,7 +165,6 @@ export function useRoomWebSocket(opts: UseRoomWebSocketOptions): UseRoomWebSocke
     setExecutionFeed((prev) => prev.filter((f) => f.id !== id));
   }, []);
 
-  // ── Message handler ───────────────────────────────────────────────────────
   const handleMessage = useCallback((event: MessageEvent) => {
     let msg: { type: string; [k: string]: unknown };
     try { msg = JSON.parse(event.data as string); }
@@ -325,7 +311,7 @@ export function useRoomWebSocket(opts: UseRoomWebSocketOptions): UseRoomWebSocke
           timestamp: Date.now(),
         };
         setReactions((prev) => [...prev, reaction]);
-        // Auto-clear after 3s
+        
         setTimeout(() => setReactions((prev) => prev.filter((r) => r.id !== reaction.id)), 3000);
         break;
       }
@@ -338,13 +324,12 @@ export function useRoomWebSocket(opts: UseRoomWebSocketOptions): UseRoomWebSocke
         break;
       }
       case 'pong': {
-        // heartbeat acknowledged
+        
         break;
       }
     }
   }, [userId, roomId, language, onCodeUpdate, onProblemChanged, onChatMessage, onPresenceUpdate, onTimerStart, onModeChange, onSubmissionResult]);
 
-  // ── Connect ───────────────────────────────────────────────────────────────
   const connect = useCallback(() => {
     if (!isMounted.current) return;
 
@@ -363,7 +348,6 @@ export function useRoomWebSocket(opts: UseRoomWebSocketOptions): UseRoomWebSocke
       setWsStatus('connected');
       reconnectCount.current = 0;
 
-      // Announce presence
       ws.send(JSON.stringify({
         type: 'presence',
         userId,
@@ -372,7 +356,6 @@ export function useRoomWebSocket(opts: UseRoomWebSocketOptions): UseRoomWebSocke
         language,
       }));
 
-      // Heartbeat — refresh presence TTL every 10s
       if (heartbeatTimer.current) clearInterval(heartbeatTimer.current);
       heartbeatTimer.current = setInterval(() => {
         if (ws.readyState === WebSocket.OPEN) {
@@ -388,7 +371,6 @@ export function useRoomWebSocket(opts: UseRoomWebSocketOptions): UseRoomWebSocke
       setWsStatus('disconnected');
       if (heartbeatTimer.current) clearInterval(heartbeatTimer.current);
 
-      // Exponential backoff reconnect
       const delay = Math.min(1000 * 2 ** reconnectCount.current, 30_000);
       reconnectCount.current++;
       reconnectTimer.current = setTimeout(connect, delay);
@@ -399,7 +381,6 @@ export function useRoomWebSocket(opts: UseRoomWebSocketOptions): UseRoomWebSocke
     };
   }, [roomId, userId, username, myColor, language, handleMessage]);
 
-  // ── Lifecycle ─────────────────────────────────────────────────────────────
   useEffect(() => {
     isMounted.current = true;
     connect();
@@ -411,7 +392,7 @@ export function useRoomWebSocket(opts: UseRoomWebSocketOptions): UseRoomWebSocke
       if (codeDebounce.current) clearTimeout(codeDebounce.current);
       wsRef.current?.close();
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  
   }, [roomId]);
 
   return {
