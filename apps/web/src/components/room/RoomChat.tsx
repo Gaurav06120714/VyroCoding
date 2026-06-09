@@ -34,7 +34,7 @@ export function RoomChat({ messages, onSendMessage }: RoomChatProps) {
         <h3 className="text-[11px] font-semibold text-ink-subtle uppercase tracking-[0.88px]">Chat</h3>
       </div>
 
-      {/* Messages */}
+      {}
       <div className="flex-1 overflow-y-auto p-3 space-y-3">
         {messages.length === 0 ? (
           <p className="text-xs text-ink-tertiary text-center py-6">
@@ -67,7 +67,7 @@ export function RoomChat({ messages, onSendMessage }: RoomChatProps) {
         <div ref={bottomRef} />
       </div>
 
-      {/* Input */}
+      {}
       <form onSubmit={handleSend} className="p-3 border-t border-hairline shrink-0">
         <div className="flex gap-2">
           <input
