@@ -2,7 +2,6 @@ import { FastifyInstance } from 'fastify';
 import { query, queryOne } from '../db/client.js';
 import { authenticate } from '../middleware/auth.js';
 
-// ── Auto-sync contest statuses based on real time ─────────────────────────
 async function syncContestStatuses(): Promise<void> {
   const now = new Date().toISOString();
   await query(
@@ -21,23 +20,21 @@ async function syncContestStatuses(): Promise<void> {
   );
 }
 
-// ── Get next Monday at 9:00 AM IST (UTC+5:30 = UTC+5h30m) ────────────────
 function nextMondayIST(): { start: Date; end: Date } {
   const now = new Date();
-  const dayOfWeek = now.getUTCDay(); // 0=Sun,1=Mon,...,6=Sat
+  const dayOfWeek = now.getUTCDay(); 
   const daysUntilMonday = dayOfWeek === 1 ? 7 : ((8 - dayOfWeek) % 7) || 7;
   const next = new Date(now);
   next.setUTCDate(now.getUTCDate() + daysUntilMonday);
-  // 9:00 AM IST = 03:30 UTC
+  
   next.setUTCHours(3, 30, 0, 0);
   const end = new Date(next);
-  end.setUTCHours(next.getUTCHours() + 2); // 2-hour contest
+  end.setUTCHours(next.getUTCHours() + 2); 
   return { start: next, end };
 }
 
-// ── Pick random non-repeating problems (1 easy + 1 medium + 1 hard) ──────
 async function pickWeeklyProblems(): Promise<string[] | null> {
-  // Get all problem IDs already used in past/upcoming contests
+  
   const used = await query<{ problem_id: string }>(
     `SELECT DISTINCT cp.problem_id FROM contest_problems cp
      JOIN contests c ON c.id = cp.contest_id`
@@ -63,11 +60,9 @@ async function pickWeeklyProblems(): Promise<string[] | null> {
   return [easy, medium, hard];
 }
 
-// ── Create the next weekly Monday contest ─────────────────────────────────
 export async function createWeeklyContest(): Promise<{ id: string; title: string } | null> {
   const { start, end } = nextMondayIST();
 
-  // Don't duplicate if one already exists for that Monday
   const existing = await queryOne<{ id: string }>(
     `SELECT id FROM contests WHERE start_time::date = $1::date`,
     [start.toISOString()]
@@ -77,7 +72,6 @@ export async function createWeeklyContest(): Promise<{ id: string; title: string
   const problemIds = await pickWeeklyProblems();
   if (!problemIds) return null;
 
-  // Week number within year
   const week = Math.ceil(
     (start.getTime() - new Date(start.getFullYear(), 0, 1).getTime()) / 604800000
   );
@@ -89,7 +83,7 @@ export async function createWeeklyContest(): Promise<{ id: string; title: string
     [title, start.toISOString(), end.toISOString()]
   );
 
-  const points = [100, 200, 300]; // easy, medium, hard
+  const points = [100, 200, 300]; 
   for (let i = 0; i < problemIds.length; i++) {
     await query(
       `INSERT INTO contest_problems (contest_id, problem_id, points, order_index)
@@ -102,7 +96,7 @@ export async function createWeeklyContest(): Promise<{ id: string; title: string
 }
 
 export async function contestsRoutes(fastify: FastifyInstance): Promise<void> {
-  // ── GET /contests ──────────────────────────────────────────────────────
+  
   fastify.get('/', async (_request, reply) => {
     await syncContestStatuses();
 
@@ -137,7 +131,6 @@ export async function contestsRoutes(fastify: FastifyInstance): Promise<void> {
     });
   });
 
-  // ── POST /contests/:id/join ────────────────────────────────────────────
   fastify.post<{ Params: { id: string } }>(
     '/:id/join',
     { preHandler: authenticate },
@@ -165,7 +158,6 @@ export async function contestsRoutes(fastify: FastifyInstance): Promise<void> {
     }
   );
 
-  // ── GET /contests/:id ─────────────────────────────────────────────────
   fastify.get<{ Params: { id: string } }>('/:id', async (request, reply) => {
     const { id } = request.params;
 
@@ -207,7 +199,6 @@ export async function contestsRoutes(fastify: FastifyInstance): Promise<void> {
     });
   });
 
-  // ── GET /contests/:id/leaderboard ─────────────────────────────────────
   fastify.get<{ Params: { id: string } }>('/:id/leaderboard', async (request, reply) => {
     const { id } = request.params;
     const entries = await query<{
@@ -235,7 +226,6 @@ export async function contestsRoutes(fastify: FastifyInstance): Promise<void> {
     });
   });
 
-  // ── POST /contests — create contest (admin only) ──────────────────────
   fastify.post<{
     Body: { title: string; startTime: string; endTime: string; problemIds: string[] };
   }>('/', { preHandler: authenticate }, async (request, reply) => {
@@ -257,7 +247,6 @@ export async function contestsRoutes(fastify: FastifyInstance): Promise<void> {
     return reply.code(201).send({ data: { id: contest.id } });
   });
 
-  // ── POST /contests/weekly — auto-create next Monday's contest ─────────
   fastify.post('/weekly', { preHandler: authenticate }, async (_request, reply) => {
     const result = await createWeeklyContest();
     if (!result) {
