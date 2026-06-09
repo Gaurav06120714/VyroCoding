@@ -16,7 +16,7 @@ async function requireAdmin(fastify: FastifyInstance, request: Parameters<typeof
 }
 
 export async function adminRoutes(fastify: FastifyInstance): Promise<void> {
-  // GET /admin/stats
+  
   fastify.get('/stats', { preHandler: authenticate }, async (request, reply) => {
     const { userId } = request.user as { userId: string };
     const user = await queryOne<{ is_admin: boolean }>('SELECT is_admin FROM users WHERE id = $1', [userId]);
@@ -37,7 +37,6 @@ export async function adminRoutes(fastify: FastifyInstance): Promise<void> {
     });
   });
 
-  // GET /admin/problems
   fastify.get('/problems', { preHandler: authenticate }, async (request, reply) => {
     const { userId } = request.user as { userId: string };
     const user = await queryOne<{ is_admin: boolean }>('SELECT is_admin FROM users WHERE id = $1', [userId]);
@@ -50,7 +49,6 @@ export async function adminRoutes(fastify: FastifyInstance): Promise<void> {
     return reply.send({ data: problems });
   });
 
-  // POST /admin/problems
   fastify.post<{
     Body: {
       title: string;
@@ -79,7 +77,6 @@ export async function adminRoutes(fastify: FastifyInstance): Promise<void> {
     return reply.code(201).send({ data: { id: row.id } });
   });
 
-  // PATCH /admin/problems/:id
   fastify.patch<{
     Params: { id: string };
     Body: {
@@ -121,7 +118,6 @@ export async function adminRoutes(fastify: FastifyInstance): Promise<void> {
     return reply.send({ data: { updated: true } });
   });
 
-  // DELETE /admin/problems/:id
   fastify.delete<{ Params: { id: string } }>('/problems/:id', { preHandler: authenticate }, async (request, reply) => {
     const { userId } = request.user as { userId: string };
     const user = await queryOne<{ is_admin: boolean }>('SELECT is_admin FROM users WHERE id = $1', [userId]);
@@ -133,7 +129,6 @@ export async function adminRoutes(fastify: FastifyInstance): Promise<void> {
     return reply.send({ data: { deleted: true } });
   });
 
-  // GET /admin/rooms
   fastify.get('/rooms', { preHandler: authenticate }, async (request, reply) => {
     const { userId } = request.user as { userId: string };
     const user = await queryOne<{ is_admin: boolean }>('SELECT is_admin FROM users WHERE id = $1', [userId]);
@@ -154,7 +149,6 @@ export async function adminRoutes(fastify: FastifyInstance): Promise<void> {
     return reply.send({ data: rooms });
   });
 
-  // DELETE /admin/rooms/:id
   fastify.delete<{ Params: { id: string } }>('/rooms/:id', { preHandler: authenticate }, async (request, reply) => {
     const { userId } = request.user as { userId: string };
     const user = await queryOne<{ is_admin: boolean }>('SELECT is_admin FROM users WHERE id = $1', [userId]);
@@ -166,7 +160,6 @@ export async function adminRoutes(fastify: FastifyInstance): Promise<void> {
     return reply.send({ data: { deleted: true } });
   });
 
-  // GET /admin/submissions
   fastify.get('/submissions', { preHandler: authenticate }, async (request, reply) => {
     const { userId } = request.user as { userId: string };
     const user = await queryOne<{ is_admin: boolean }>('SELECT is_admin FROM users WHERE id = $1', [userId]);
