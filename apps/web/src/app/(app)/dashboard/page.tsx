@@ -37,7 +37,7 @@ export default function DashboardPage() {
         ? Math.round((p.accepted / p.totalSubmissions) * 100)
         : null;
       setAcceptanceRate(rate);
-      // Simple streak: count consecutive days from today with submissions
+      
       const days = new Set(
         (p.recentSubmissions ?? []).map((s) =>
           new Date(s.createdAt).toDateString()
@@ -76,7 +76,7 @@ export default function DashboardPage() {
       <Navbar />
       <div className="p-8 max-w-6xl mx-auto space-y-4">
 
-        {/* Row 1 */}
+        {}
         <div className="grid grid-cols-12 gap-4 fade-up">
           <div className="col-span-12 md:col-span-8 lg-card lg-shimmer p-6">
             <p className="text-[11px] font-semibold uppercase tracking-[0.88px] text-white/40 mb-2">
@@ -109,7 +109,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Row 2 */}
+        {}
         <div className="grid grid-cols-12 gap-4 fade-up fade-up-delay-1">
           {[
             {
@@ -141,7 +141,7 @@ export default function DashboardPage() {
           ))}
         </div>
 
-        {/* Row 3 */}
+        {}
         <div className="grid grid-cols-12 gap-4 fade-up fade-up-delay-2">
           <div className="col-span-12 md:col-span-8">
             <div className="flex items-center justify-between mb-3">
