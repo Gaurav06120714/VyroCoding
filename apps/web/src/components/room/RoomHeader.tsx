@@ -18,7 +18,7 @@ interface RoomHeaderProps {
   room: Room;
   participantCount: number;
   isHost?: boolean;
-  // Voice
+  
   inVoice: boolean;
   micMuted: boolean;
   micError: string | null;
@@ -26,7 +26,7 @@ interface RoomHeaderProps {
   onJoinVoice: () => void;
   onLeaveVoice: () => void;
   onToggleMute: () => void;
-  // Timer
+  
   timerEndTime?: string | null;
   onTimerEnd?: () => void;
 }
@@ -99,7 +99,7 @@ export function RoomHeader({
   return (
     <div className="shrink-0">
       <div className="h-14 bg-surface1 border-b border-hairline flex items-center justify-between px-4">
-        {/* Left: back + room info */}
+        {}
         <div className="flex items-center gap-3">
           <Link href="/rooms" className="p-1.5 rounded-md hover:bg-surface2 text-ink-subtle hover:text-ink transition-colors">
             <ArrowLeft className="w-4 h-4" />
@@ -119,10 +119,10 @@ export function RoomHeader({
           </div>
         </div>
 
-        {/* Right controls */}
+        {}
         <div className="flex items-center gap-3">
 
-          {/* Timer */}
+          {}
           {remaining !== null && (
             <div
               className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-mono font-semibold border"
@@ -143,7 +143,7 @@ export function RoomHeader({
             </div>
           )}
 
-          {/* Host: Set Timer button */}
+          {}
           {isHost && (
             <div className="relative">
               <button
@@ -170,7 +170,7 @@ export function RoomHeader({
             </div>
           )}
 
-          {/* Voice controls */}
+          {}
           {inVoice ? (
             <div className="flex items-center gap-1.5">
               <div className="flex items-center gap-1 mr-1">
@@ -230,7 +230,7 @@ export function RoomHeader({
             </button>
           )}
 
-          {/* Participants */}
+          {}
           <div className="flex items-center gap-2">
             <div className="flex -space-x-1.5">
               {Array.from({ length: Math.min(participantCount, 4) }).map((_, i) => (
@@ -248,7 +248,7 @@ export function RoomHeader({
             </span>
           </div>
 
-          {/* Status badge */}
+          {}
           <span className={`text-xs font-medium rounded-full px-3 py-1 ${
             room.status === 'active'  ? 'bg-easy/15 text-easy'
             : room.status === 'waiting' ? 'bg-[rgba(245,158,11,0.15)] text-[#f59e0b]'
@@ -259,7 +259,7 @@ export function RoomHeader({
         </div>
       </div>
 
-      {/* Mic error banner */}
+      {}
       {micError && (
         <div className="px-4 py-2 text-xs text-[#ef4444] bg-[rgba(239,68,68,0.08)] border-b border-[rgba(239,68,68,0.2)] flex items-center gap-2">
           <MicOff className="w-3.5 h-3.5 shrink-0" />
