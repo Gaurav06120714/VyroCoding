@@ -14,7 +14,6 @@ export const LANGUAGES: Record<Language, { id: Language; name: string; monacoId:
   [Language.Rust]:       { id: Language.Rust,       name: 'Rust',                    monacoId: 'rust' },
 };
 
-// Judge0 status IDs → our status
 const JUDGE0_STATUS_MAP: Record<number, SubmissionStatus> = {
   1:  SubmissionStatus.Processing,
   2:  SubmissionStatus.Processing,
@@ -54,8 +53,6 @@ function base64Decode(str: string): string {
   return Buffer.from(str, 'base64').toString('utf-8');
 }
 
-// ── Output normalization ──────────────────────────────────────────────────────
-
 export function normalizeOutput(s: string): string {
   return s
     .replace(/\r\n/g, '\n')
@@ -68,19 +65,16 @@ export function outputsMatch(actual: string, expected: string): boolean {
   const a = normalizeOutput(actual);
   const e = normalizeOutput(expected);
 
-  // 1. Exact match
   if (a === e) return true;
 
-  // 2. JSON-normalized match
   try {
     const pa = JSON.parse(a);
     const pe = JSON.parse(e);
     if (JSON.stringify(pa) === JSON.stringify(pe)) return true;
   } catch {
-    // not valid JSON — continue
+    
   }
 
-  // 3. Numeric epsilon match (for single float outputs)
   const fa = parseFloat(a);
   const fe = parseFloat(e);
   if (!isNaN(fa) && !isNaN(fe) && isFinite(fa) && isFinite(fe)) {
@@ -90,12 +84,6 @@ export function outputsMatch(actual: string, expected: string): boolean {
   return false;
 }
 
-// ── Code wrapping (per-language stdin→function→stdout harness) ────────────────
-
-/**
- * Wraps user code with a stdin→function→stdout harness.
- * The test case input is always a JSON array of arguments.
- */
 export function wrapCode(code: string, languageId: Language): string {
   switch (languageId) {
     case Language.JavaScript: {
@@ -142,12 +130,12 @@ export function wrapCode(code: string, languageId: Language): string {
     }
 
     case Language.Cpp: {
-      // If code already has int main(), use as-is (standard competitive style)
+      
       if (/int\s+main\s*\(/.test(code)) return code;
-      // Detect first non-main function name for the harness
+      
       const fnMatch = code.match(/(?:int|long long|string|bool|double|vector\s*<[^>]+>)\s+(\w+)\s*\(/);
       const fnName = fnMatch?.[1] ?? 'solution';
-      // Minimal JSON-array stdin reader for common types
+      
       return (
         `#include <bits/stdc++.h>\n` +
         `#include <sstream>\n` +
@@ -168,10 +156,9 @@ export function wrapCode(code: string, languageId: Language): string {
     }
 
     case Language.Java: {
-      // If code already has public static void main, use as-is
+      
       if (/public\s+static\s+void\s+main\s*\(/.test(code)) return code;
-      // Java function-only solutions are rare in competitive programming;
-      // wrap in a Solution class with a main that instantiates and calls the first method
+      
       const methodMatch = code.match(/public\s+(?:static\s+)?(?:\w+(?:<[^>]+>)?)\s+(\w+)\s*\(/);
       const methodName = methodMatch?.[1] ?? 'solve';
       return (
@@ -186,13 +173,13 @@ export function wrapCode(code: string, languageId: Language): string {
     }
 
     case Language.Go: {
-      // If code already has func main(), use as-is
+      
       if (/func\s+main\s*\(\s*\)/.test(code)) return code;
       return code;
     }
 
     case Language.Rust: {
-      // If code already has fn main(), use as-is
+      
       if (/fn\s+main\s*\(\s*\)/.test(code)) return code;
       return code;
     }
@@ -201,8 +188,6 @@ export function wrapCode(code: string, languageId: Language): string {
       return code;
   }
 }
-
-// ── Single submission ─────────────────────────────────────────────────────────
 
 export async function submitCode(
   code: string,
@@ -297,8 +282,6 @@ export async function submitAndWait(
   };
 }
 
-// ── Batch submission ──────────────────────────────────────────────────────────
-
 interface BatchSubmission {
   language_id: number;
   source_code: string;
@@ -383,13 +366,6 @@ export interface TestCaseResult {
   isHidden?: boolean;
 }
 
-/**
- * Submit all test cases at once via batch API and poll until all finish.
- * Returns per-test verdict with normalized output comparison.
- *
- * If the first result has a compile error (status 6), the same error is
- * propagated to all test cases immediately — no need for a separate pre-check.
- */
 export async function submitBatchAndWait(
   code: string,
   languageId: Language,
@@ -412,13 +388,11 @@ export async function submitBatchAndWait(
 
   const tokens = await submitBatch(submissions);
 
-  // Poll until all submissions are done (status.id > 2 means finished)
   let results: ExecutionResult[] = [];
   for (let attempt = 0; attempt < maxPollAttempts; attempt++) {
     await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
     results = await getBatchResults(tokens);
 
-    // Fast-path: if first result has compile error, all will — stop polling
     if (results[0]?.status.id === 6) break;
 
     const allDone = results.every((r) => r.status.id > 2);
@@ -449,7 +423,7 @@ export async function submitBatchAndWait(
         verdict = 'wrong_answer';
       }
     } else {
-      // Still in queue after max polls — treat as TLE
+      
       verdict = 'time_limit_exceeded';
     }
 
@@ -465,7 +439,6 @@ export async function submitBatchAndWait(
     };
   };
 
-  // If first result has compile error, propagate to all without waiting
   if (results[0]?.status.id === 6) {
     const compileErr: TestCaseResult = mapResult(results[0], testCases[0]);
     return testCases.map((tc, i) =>
