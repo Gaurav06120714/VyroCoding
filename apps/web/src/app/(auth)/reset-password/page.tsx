@@ -6,16 +6,12 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Loader2, ArrowLeft, Eye, EyeOff, CheckCircle2, AlertTriangle, Clock } from 'lucide-react';
 import { authApiExt } from '@/lib/api';
 
-// ── Token validation ──────────────────────────────────────────────────────────
-
 function validateToken(token: string): string | null {
   if (!token) return 'No reset token found. Please request a new password reset link.';
   if (token.length !== 64) return 'The reset token is malformed. Please request a new password reset link.';
   if (!/^[0-9a-f]+$/.test(token)) return 'The reset token contains invalid characters. Please request a new password reset link.';
-  return null; // valid
+  return null; 
 }
-
-// ── Password strength ─────────────────────────────────────────────────────────
 
 function getPasswordStrength(password: string): { score: number; label: string; color: string } {
   if (password.length === 0) return { score: 0, label: '', color: '' };
@@ -31,8 +27,6 @@ function getPasswordStrength(password: string): { score: number; label: string; 
   if (score <= 3) return { score, label: 'Good',   color: '#3b82f6' };
   return           { score, label: 'Strong', color: '#22c55e' };
 }
-
-// ── Inner form (needs useSearchParams, must be wrapped in Suspense) ───────────
 
 function ResetPasswordForm() {
   const router       = useRouter();
@@ -50,13 +44,11 @@ function ResetPasswordForm() {
   const [success, setSuccess]   = useState(false);
   const [countdown, setCountdown] = useState(5);
 
-  // Pre-validate the token from URL on mount
   const [tokenError, setTokenError] = useState<string | null>(null);
   useEffect(() => {
     setTokenError(validateToken(tokenFromUrl));
   }, [tokenFromUrl]);
 
-  // Countdown redirect after success
   useEffect(() => {
     if (!success) return;
     if (countdown <= 0) { router.push('/login'); return; }
@@ -72,7 +64,6 @@ function ResetPasswordForm() {
     e.preventDefault();
     setError('');
 
-    // Client-side guards
     const tokenValidationError = validateToken(token);
     if (tokenValidationError) { setError(tokenValidationError); return; }
     if (password.length < 8) { setError('Password must be at least 8 characters.'); return; }
@@ -84,7 +75,7 @@ function ResetPasswordForm() {
       setSuccess(true);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Reset failed. Please try again.';
-      // Detect expiry vs generic error for better UX
+      
       if (msg.toLowerCase().includes('expired') || msg.toLowerCase().includes('invalid')) {
         setError('This reset link has expired or is invalid. Please request a new one.');
       } else {
@@ -94,8 +85,6 @@ function ResetPasswordForm() {
       setLoading(false);
     }
   };
-
-  // ── Success state ──────────────────────────────────────────────────────────
 
   if (success) {
     return (
@@ -119,8 +108,6 @@ function ResetPasswordForm() {
     );
   }
 
-  // ── Token missing / malformed ──────────────────────────────────────────────
-
   if (tokenError && !token) {
     return (
       <div className="text-center space-y-4">
@@ -139,12 +126,10 @@ function ResetPasswordForm() {
     );
   }
 
-  // ── Reset form ─────────────────────────────────────────────────────────────
-
   return (
     <form onSubmit={handleSubmit} className="space-y-4" noValidate>
 
-      {/* Token field — shown if not pre-filled from URL */}
+      {}
       {!tokenFromUrl && (
         <div>
           <label className="text-xs text-ink-subtle mb-1.5 block">Reset token</label>
@@ -160,7 +145,7 @@ function ResetPasswordForm() {
         </div>
       )}
 
-      {/* New password */}
+      {}
       <div>
         <label className="text-xs text-ink-subtle mb-1.5 block">New password</label>
         <div className="relative">
@@ -184,7 +169,7 @@ function ResetPasswordForm() {
           </button>
         </div>
 
-        {/* Strength bar */}
+        {}
         {password.length > 0 && (
           <div className="mt-2 space-y-1">
             <div className="flex gap-1">
@@ -203,7 +188,7 @@ function ResetPasswordForm() {
         )}
       </div>
 
-      {/* Confirm password */}
+      {}
       <div>
         <label className="text-xs text-ink-subtle mb-1.5 block">Confirm password</label>
         <div className="relative">
@@ -235,7 +220,7 @@ function ResetPasswordForm() {
         )}
       </div>
 
-      {/* Error banner */}
+      {}
       {error && (
         <div className="flex items-start gap-2.5 p-3 rounded-lg text-xs"
              style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
@@ -273,8 +258,6 @@ function ResetPasswordForm() {
     </form>
   );
 }
-
-// ── Page wrapper ──────────────────────────────────────────────────────────────
 
 export default function ResetPasswordPage() {
   return (
