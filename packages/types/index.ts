@@ -1,5 +1,3 @@
-// ─── Enums ────────────────────────────────────────────────────────────────────
-
 export enum Difficulty {
   Easy = 'easy',
   Medium = 'medium',
@@ -58,8 +56,6 @@ export const LANGUAGE_MONACO_MAP: Record<Language, string> = {
   [Language.Go]: 'go',
   [Language.Rust]: 'rust',
 };
-
-// ─── Core Models ──────────────────────────────────────────────────────────────
 
 export interface User {
   id: string;
@@ -204,8 +200,6 @@ export interface ExecutionResult {
   submissionStatus: SubmissionStatus;
 }
 
-// ─── API Request / Response shapes ────────────────────────────────────────────
-
 export interface RegisterRequest {
   username: string;
   email: string;
@@ -251,8 +245,6 @@ export interface PaginatedResponse<T> {
   pageSize: number;
   hasMore: boolean;
 }
-
-// ─── WebSocket message types ───────────────────────────────────────────────────
 
 export type WsMessageType =
   | 'chat:message'
