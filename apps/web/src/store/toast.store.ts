@@ -18,7 +18,7 @@ export const useToastStore = create<ToastState>((set) => ({
   addToast: (toast) => {
     const id = `${Date.now()}-${Math.random()}`;
     set((state) => ({ toasts: [...state.toasts, { ...toast, id }] }));
-    // Auto-remove after 4 seconds
+    
     setTimeout(() => {
       set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) }));
     }, 4000);
