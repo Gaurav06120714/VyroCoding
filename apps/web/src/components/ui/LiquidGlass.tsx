@@ -3,8 +3,6 @@
 import dynamic from 'next/dynamic';
 import type { CSSProperties, ReactNode } from 'react';
 
-// Dynamically import with SSR disabled — liquid-glass-react uses browser-only APIs
-// (document.createElement, canvas, window) that crash during Next.js SSR
 const LiquidGlassBase = dynamic(() => import('liquid-glass-react'), {
   ssr: false,
   loading: () => null,
@@ -26,7 +24,6 @@ interface LiquidGlassProps {
   mode?: 'standard' | 'polar' | 'prominent' | 'shader';
 }
 
-/** Card surface */
 export function GlassCard({
   children,
   className = '',
@@ -60,7 +57,6 @@ export function GlassCard({
   );
 }
 
-/** Pill / small badge */
 export function GlassPill({ children, className = '', style, onClick }: LiquidGlassProps) {
   return (
     <LiquidGlassBase
@@ -79,7 +75,6 @@ export function GlassPill({ children, className = '', style, onClick }: LiquidGl
   );
 }
 
-/** Button */
 export function GlassButton({ children, className = '', style, cornerRadius = 100, onClick }: LiquidGlassProps) {
   return (
     <LiquidGlassBase
