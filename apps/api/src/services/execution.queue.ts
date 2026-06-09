@@ -1,18 +1,10 @@
 import { env } from '../config/env.js';
-/**
- * BullMQ execution queue — async code execution with result broadcasting.
- * Jobs flow: enqueue → Judge0 batch → store result → broadcast to room via Pub/Sub
- */
+
 import { Queue, Worker, Job } from 'bullmq';
 import type { Redis } from 'ioredis';
 
 const QUEUE_NAME = 'code-execution';
 
-/**
- * Parse REDIS_URL into BullMQ connection options.
- * BullMQ's `connection` field accepts ioredis options (host/port/password),
- * not a raw URL string, so we parse it here.
- */
 function parseRedisUrl(url: string): { host: string; port: number; password?: string; db?: number } {
   try {
     const u = new URL(url);
@@ -28,8 +20,6 @@ function parseRedisUrl(url: string): { host: string; port: number; password?: st
 }
 
 const redisConnection = parseRedisUrl(env.REDIS_URL) as unknown as Redis;
-
-// ── Job payload ────────────────────────────────────────────────────────────────
 
 export interface ExecutionJobData {
   submissionId: string;
@@ -54,8 +44,6 @@ export interface ExecutionJobResult {
   testsTotal: number;
 }
 
-// ── Queue singleton ────────────────────────────────────────────────────────────
-
 let executionQueue: Queue<ExecutionJobData, ExecutionJobResult> | null = null;
 
 export function getExecutionQueue(): Queue<ExecutionJobData, ExecutionJobResult> {
@@ -73,18 +61,14 @@ export function getExecutionQueue(): Queue<ExecutionJobData, ExecutionJobResult>
   return executionQueue;
 }
 
-// ── Enqueue helper ─────────────────────────────────────────────────────────────
-
 export async function enqueueExecution(data: ExecutionJobData): Promise<string> {
   const queue = getExecutionQueue();
   const job = await queue.add('execute', data, {
     jobId: data.submissionId,
-    priority: data.roomId ? 1 : 2, // Room submissions get higher priority
+    priority: data.roomId ? 1 : 2, 
   });
   return job.id ?? data.submissionId;
 }
-
-// ── Worker ─────────────────────────────────────────────────────────────────────
 
 let worker: Worker | null = null;
 
@@ -102,7 +86,6 @@ export function startExecutionWorker(): void {
       const { publishToRoom } = await import('./pubsub.service.js');
       const { Language } = await import('@vyro/types');
 
-      // Broadcast execution-start to room
       if (roomId) {
         await publishToRoom(roomId, {
           type: 'execution-start',
@@ -112,13 +95,11 @@ export function startExecutionWorker(): void {
         });
       }
 
-      // Update DB status to processing
       await query(
         'UPDATE submissions SET status = $1 WHERE id = $2',
         ['processing', submissionId]
       );
 
-      // Pre-check for compile error using first test case
       if (testCases.length === 0) {
         await query('UPDATE submissions SET status = $1 WHERE id = $2', ['accepted', submissionId]);
         return {
@@ -164,7 +145,6 @@ export function startExecutionWorker(): void {
         return jobResult;
       }
 
-      // Submit all test cases via batch API
       const batchResults = await submitBatchAndWait(
         code,
         languageId as typeof Language[keyof typeof Language],
@@ -173,7 +153,6 @@ export function startExecutionWorker(): void {
         800
       );
 
-      // Aggregate: find first fail, count passes
       let testsPassed = 0;
       let totalTimeMs = 0;
       let maxMemoryKb = 0;
@@ -212,7 +191,6 @@ export function startExecutionWorker(): void {
         [finalStatus, failStdout, failStderr, totalTimeMs, maxMemoryKb, submissionId]
       );
 
-      // Update user stats if accepted
       if (allPassed) {
         await query(
           `UPDATE users SET problems_solved = problems_solved + 1
@@ -236,7 +214,6 @@ export function startExecutionWorker(): void {
         testsTotal: batchResults.length,
       };
 
-      // Broadcast result to room
       if (roomId) {
         await publishToRoom(roomId, {
           type: 'execution-complete',
