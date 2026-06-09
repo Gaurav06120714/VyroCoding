@@ -10,7 +10,7 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // ── New dark slate + cyan design system ──────────────────────────
+        
         canvas:    '#0a0e17',
         surface1:  '#0f1623',
         surface2:  '#161d2e',
@@ -31,7 +31,7 @@ const config: Config = {
         easy:    '#10b981',
         medium:  '#f59e0b',
         hard:    '#ef4444',
-        // legacy aliases (keep existing pages working)
+        
         background: '#0a0e17',
         surface:    '#0f1623',
         'surface-2':'#161d2e',
