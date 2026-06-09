@@ -14,8 +14,6 @@ import {
 import { sendPasswordResetEmail } from '../services/email.service.js';
 import type { RegisterRequest, LoginRequest, User } from '@vyro/types';
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
 interface DbUser {
   id: string;
   username: string;
@@ -37,27 +35,18 @@ function toUser(row: DbUser): User {
   };
 }
 
-/**
- * Generate a cryptographically secure reset token.
- * Returns both the raw token (to be sent in the email link) and its
- * SHA-256 hash (to be stored in the database — never the raw token).
- */
 function generateResetToken(): { raw: string; hash: string } {
-  const raw = crypto.randomBytes(32).toString('hex');   // 64 hex chars
+  const raw = crypto.randomBytes(32).toString('hex');   
   const hash = crypto.createHash('sha256').update(raw).digest('hex');
   return { raw, hash };
 }
 
-/** Hash an incoming token the same way so we can do a DB lookup by hash. */
 function hashToken(raw: string): string {
   return crypto.createHash('sha256').update(raw).digest('hex');
 }
 
-// ── Routes ────────────────────────────────────────────────────────────────────
-
 export async function authRoutes(fastify: FastifyInstance): Promise<void> {
 
-  // ── POST /auth/register ──────────────────────────────────────────────────────
   fastify.post<{ Body: RegisterRequest }>('/register', {
     schema: {
       body: {
@@ -72,7 +61,7 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
     },
     preHandler: [
       botCheck(),
-      ipRateLimit(3, 60 * 60_000, 'auth:register'),   // 3 / hr / IP
+      ipRateLimit(3, 60 * 60_000, 'auth:register'),   
     ],
   }, async (request, reply) => {
     const { username, email, password } = request.body;
@@ -99,7 +88,6 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
     return reply.code(201).send({ data: { ...toUser(user), token } });
   });
 
-  // ── POST /auth/login ─────────────────────────────────────────────────────────
   fastify.post<{ Body: LoginRequest }>('/login', {
     schema: {
       body: {
@@ -121,7 +109,7 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
     );
 
     if (!user) {
-      // Constant-time path to avoid timing attacks that reveal email existence
+      
       await bcrypt.compare(password, '$2b$12$invalidhashpadding000000000000000000000000000000000000000');
       await recordLoginFailure(request, email);
       return reply.code(401).send({ error: 'Invalid credentials' });
@@ -139,7 +127,6 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
     return reply.send({ data: { ...toUser(user), token } });
   });
 
-  // ── GET /auth/me ─────────────────────────────────────────────────────────────
   fastify.get('/me', { preHandler: authenticate }, async (request, reply) => {
     const { userId } = request.user as { userId: string };
 
@@ -154,14 +141,6 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
     return reply.send({ data: toUser(user) });
   });
 
-  // ── POST /auth/forgot-password ────────────────────────────────────────────────
-  //
-  // Security properties:
-  //   • Always returns the same response body — prevents email enumeration
-  //   • Raw token never persisted — only its SHA-256 hash is stored
-  //   • Token expires in 1 hour
-  //   • Rate-limited: 3 requests / hour / IP
-  //
   fastify.post<{ Body: { email: string } }>('/forgot-password', {
     schema: {
       body: {
@@ -184,18 +163,16 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
       [email],
     );
 
-    // Always return the same shape so callers can't enumerate which emails exist
     const okResponse = { data: { message: 'If that email exists, a reset link has been sent.' } };
 
     if (!user) {
-      // Artificial delay to prevent timing-based email enumeration
+      
       await new Promise((r) => setTimeout(r, 200 + Math.random() * 200));
       return reply.send(okResponse);
     }
 
-    // Generate token and persist only the hash
     const { raw: rawToken, hash: tokenHash } = generateResetToken();
-    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); 
 
     await query(
       `UPDATE users
@@ -208,7 +185,6 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
 
     const { sent, previewLink } = await sendPasswordResetEmail(user.email, resetLink);
 
-    // Dev mode: return the token/link so developers can test without email creds
     if (!sent && previewLink && env.NODE_ENV !== 'production') {
       return reply.send({
         data: {
@@ -222,14 +198,6 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
     return reply.send(okResponse);
   });
 
-  // ── POST /auth/reset-password ─────────────────────────────────────────────────
-  //
-  // Security properties:
-  //   • Looks up user by SHA-256 hash of the token — raw token never in DB
-  //   • Returns same error for "not found" and "expired" — no oracle
-  //   • Clears token on success so it can't be reused
-  //   • Rate-limited: 5 requests / 15 min / IP
-  //
   fastify.post<{ Body: { token: string; newPassword: string } }>('/reset-password', {
     schema: {
       body: {
@@ -248,7 +216,6 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
   }, async (request, reply) => {
     const { token, newPassword } = request.body;
 
-    // Hash the incoming token before the DB lookup
     const tokenHash = hashToken(token);
 
     const user = await queryOne<{ id: string; reset_token_expires: string }>(
@@ -258,14 +225,12 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
       [tokenHash],
     );
 
-    // Unified error message — prevents oracle attacks
     if (!user || !user.reset_token_expires || new Date(user.reset_token_expires) < new Date()) {
       return reply.code(400).send({ error: 'Invalid or expired reset token.' });
     }
 
     const passwordHash = await bcrypt.hash(newPassword, 12);
 
-    // Update password and clear token atomically
     await query(
       `UPDATE users
          SET password_hash       = $1,
@@ -278,8 +243,6 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
     return reply.send({ data: { message: 'Password reset successfully. You can now log in.' } });
   });
 
-  // ── POST /auth/change-password ────────────────────────────────────────────────
-  // Authenticated users can change their password directly (no token needed)
   fastify.post<{ Body: { currentPassword: string; newPassword: string } }>(
     '/change-password',
     {
