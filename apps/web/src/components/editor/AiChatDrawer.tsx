@@ -10,8 +10,6 @@ import { Language, LANGUAGE_NAMES } from '@vyro/types';
 import { OllamaSetupModal } from './OllamaSetupModal';
 import type { OllamaSetupStatus } from '@/lib/api';
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-
 interface AiMessage {
   role: 'user' | 'assistant' | 'system';
   content: string;
@@ -26,16 +24,12 @@ interface AiChatDrawerProps {
   problemDescription?: string;
 }
 
-// ── Quick actions ─────────────────────────────────────────────────────────────
-
 const QUICK_ACTIONS = [
   { id: 'hint',    icon: Lightbulb, label: 'Hint',    prompt: 'Give me a small hint without spoiling the solution.', color: 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20 hover:bg-yellow-400/15' },
   { id: 'explain', icon: BookOpen,  label: 'Explain', prompt: 'Explain what my current code does step-by-step.',         color: 'text-blue-400 bg-blue-400/10 border-blue-400/20 hover:bg-blue-400/15' },
   { id: 'review',  icon: Eye,       label: 'Review',  prompt: 'Review my code for bugs, edge cases, and performance.',   color: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20 hover:bg-emerald-400/15' },
   { id: 'debug',   icon: Bug,       label: 'Debug',   prompt: 'Help me find and fix the bug in my code.',                color: 'text-red-400 bg-red-400/10 border-red-400/20 hover:bg-red-400/15' },
 ] as const;
-
-// ── Markdown formatter ────────────────────────────────────────────────────────
 
 function formatResponse(content: string) {
   if (!content) return null;
