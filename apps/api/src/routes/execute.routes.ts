@@ -10,7 +10,7 @@ import {
 import type { ExecuteRequest, SubmitRequest, Language } from '@vyro/types';
 
 export async function executeRoutes(fastify: FastifyInstance): Promise<void> {
-  // POST /execute/run — run code without persisting (single stdin)
+  
   fastify.post<{ Body: ExecuteRequest }>(
     '/run',
     { preHandler: authenticate },
@@ -27,7 +27,6 @@ export async function executeRoutes(fastify: FastifyInstance): Promise<void> {
     }
   );
 
-  // POST /execute/run-all — run against all visible test cases using batch API
   fastify.post<{ Body: { code: string; languageId: number; problemId: string } }>(
     '/run-all',
     { preHandler: authenticate },
@@ -49,8 +48,7 @@ export async function executeRoutes(fastify: FastifyInstance): Promise<void> {
       }
 
       try {
-        // Submit all visible cases via batch API simultaneously.
-        // submitBatchAndWait handles compile-error propagation internally.
+        
         const testInputs: TestCaseInput[] = visibleCases.map((tc) => ({
           input: tc.input,
           expectedOutput: tc.expectedOutput,
@@ -59,7 +57,6 @@ export async function executeRoutes(fastify: FastifyInstance): Promise<void> {
 
         const batchResults = await submitBatchAndWait(code, languageId as Language, testInputs);
 
-        // Attach original input/expectedOutput to each result for the frontend
         const enriched = batchResults.map((r, i) => ({
           ...r,
           input: visibleCases[i].input,
@@ -74,7 +71,6 @@ export async function executeRoutes(fastify: FastifyInstance): Promise<void> {
     }
   );
 
-  // POST /execute/verify — run against ALL test cases (hidden + visible), used by AI verify
   fastify.post<{ Body: { code: string; languageId: number; problemId: string } }>(
     '/verify',
     { preHandler: authenticate },
@@ -118,7 +114,6 @@ export async function executeRoutes(fastify: FastifyInstance): Promise<void> {
     }
   );
 
-  // POST /execute/submit — submit against problem test cases
   fastify.post<{ Body: SubmitRequest }>(
     '/submit',
     { preHandler: authenticate },
@@ -136,7 +131,6 @@ export async function executeRoutes(fastify: FastifyInstance): Promise<void> {
 
       const testCases = problem.test_cases;
 
-      // Create pending submission
       const [submission] = await dbQuery<{ id: string }>(
         `INSERT INTO submissions (user_id, problem_id, room_id, language_id, code, status)
          VALUES ($1, $2, $3, $4, $5, 'processing')
@@ -144,7 +138,6 @@ export async function executeRoutes(fastify: FastifyInstance): Promise<void> {
         [userId, problemId, roomId ?? null, languageId, code]
       );
 
-      // Run against all test cases asynchronously using batch API
       runTestCases(submission.id, userId, problemId, code, languageId as Language, testCases)
         .catch((err) => console.error('Test case runner error:', err));
 
@@ -152,7 +145,6 @@ export async function executeRoutes(fastify: FastifyInstance): Promise<void> {
     }
   );
 
-  // GET /execute/submissions/:id — poll submission result
   fastify.get<{ Params: { id: string } }>(
     '/submissions/:id',
     { preHandler: authenticate },
@@ -179,7 +171,6 @@ export async function executeRoutes(fastify: FastifyInstance): Promise<void> {
     }
   );
 
-  // GET /execute/status/:submissionId — returns current submission status
   fastify.get<{ Params: { submissionId: string } }>(
     '/status/:submissionId',
     { preHandler: authenticate },
@@ -223,8 +214,6 @@ async function runTestCases(
     return;
   }
 
-  // Submit all test cases via batch API.
-  // Compile errors are detected from the results themselves.
   const testInputs: TestCaseInput[] = testCases.map((tc) => ({
     input: tc.input,
     expectedOutput: tc.expectedOutput,
@@ -233,7 +222,6 @@ async function runTestCases(
 
   const results = await submitBatchAndWait(code, languageId, testInputs);
 
-  // Find first non-passing case to determine verdict
   let firstFail: TestCaseResult | null = null;
   let testsPassed = 0;
   let totalTimeMs = 0;
@@ -270,7 +258,6 @@ async function runTestCases(
     [finalStatus, failStdout, failStderr, totalTimeMs, maxMemoryKb, submissionId]
   );
 
-  // Update user's problems solved count on first acceptance
   if (allPassed) {
     await dbQuery(
       `UPDATE users SET problems_solved = problems_solved + 1
