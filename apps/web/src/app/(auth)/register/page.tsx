@@ -21,13 +21,13 @@ export default function RegisterPage() {
       await register(username, email, password);
       router.push('/dashboard');
     } catch {
-      // error set in store
+      
     }
   }
 
   return (
     <div className="min-h-screen bg-canvas flex items-center justify-center px-4">
-      {/* Ambient glow behind card */}
+      {}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         <div style={{
           width: 600,
@@ -38,7 +38,7 @@ export default function RegisterPage() {
       </div>
 
       <div className="w-full max-w-[440px] relative">
-        {/* Brand */}
+        {}
         <div className="flex items-center justify-center gap-2.5 mb-8">
           <div className="lg-btn-primary flex items-center justify-center w-9 h-9 !px-0 !rounded-[12px]">
             <Code2 className="w-5 h-5 text-white" />
@@ -46,7 +46,7 @@ export default function RegisterPage() {
           <Link href="/" className="font-bold text-lg text-white">Vyro Coding</Link>
         </div>
 
-        {/* Card */}
+        {}
         <div className="lg-strong p-8">
           <h1 className="text-2xl font-bold tracking-[-0.04em] text-white mb-1">Create your account</h1>
           <p className="text-sm text-[#8a9bb5] mb-6">Free forever — no credit card required</p>
