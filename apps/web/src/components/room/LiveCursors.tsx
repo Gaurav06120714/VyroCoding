@@ -1,17 +1,11 @@
 'use client';
 
-/**
- * LiveCursors — renders remote users' cursor positions as colored badges
- * overlaid on top of the Monaco editor container.
- * We don't inject directly into Monaco's DOM; instead we show floating
- * name badges that pulse briefly when updated.
- */
 import { useEffect, useRef, useState } from 'react';
 import type { RemoteCursor } from '@/hooks/useRoomWebSocket';
 
 interface LiveCursorsProps {
   cursors: Map<string, RemoteCursor>;
-  /** height of the editor area in px (used for clamping) */
+  
   editorHeight?: number;
 }
 
@@ -19,8 +13,8 @@ interface AnimatedCursor extends RemoteCursor {
   pulse: boolean;
 }
 
-const LINE_HEIGHT_PX = 19; // Monaco default line height
-const CHAR_WIDTH_PX  = 8.4; // approximate for 14px monospace
+const LINE_HEIGHT_PX = 19; 
+const CHAR_WIDTH_PX  = 8.4; 
 
 export function LiveCursors({ cursors, editorHeight = 400 }: LiveCursorsProps) {
   const [animated, setAnimated] = useState<Map<string, AnimatedCursor>>(new Map());
@@ -38,7 +32,6 @@ export function LiveCursors({ cursors, editorHeight = 400 }: LiveCursorsProps) {
     setAnimated(next);
     prevRef.current = new Map(cursors);
 
-    // Clear pulse after animation
     const t = setTimeout(() => {
       setAnimated((m) => {
         const cleared = new Map<string, AnimatedCursor>();
@@ -58,7 +51,7 @@ export function LiveCursors({ cursors, editorHeight = 400 }: LiveCursorsProps) {
     >
       {Array.from(animated.values()).map((cursor) => {
         const top    = Math.min((cursor.line - 1) * LINE_HEIGHT_PX + 2, editorHeight - 24);
-        const left   = Math.min((cursor.column - 1) * CHAR_WIDTH_PX + 60, 9999); // 60px gutter approx
+        const left   = Math.min((cursor.column - 1) * CHAR_WIDTH_PX + 60, 9999); 
 
         return (
           <div
@@ -66,12 +59,12 @@ export function LiveCursors({ cursors, editorHeight = 400 }: LiveCursorsProps) {
             className="absolute flex items-center gap-1 select-none"
             style={{ top, left, transition: 'top 0.15s ease, left 0.15s ease' }}
           >
-            {/* Cursor caret */}
+            {}
             <div
               className="w-0.5 h-4 rounded-sm"
               style={{ backgroundColor: cursor.color, opacity: cursor.pulse ? 1 : 0.7 }}
             />
-            {/* Name badge */}
+            {}
             <div
               className="text-[9px] font-semibold px-1.5 py-0.5 rounded-sm whitespace-nowrap shadow-sm"
               style={{
