@@ -22,7 +22,7 @@ export function RoomUsers({ participants, hostId }: RoomUsersProps) {
             key={p.userId}
             className="flex items-center gap-3 py-2 border-b border-hairline last:border-b-0"
           >
-            {/* Online indicator */}
+            {}
             <div className="relative shrink-0">
               <div className="w-7 h-7 rounded-full bg-surface1 border border-hairline flex items-center justify-center text-xs font-medium text-ink-muted">
                 {(p.user?.username ?? 'U').charAt(0).toUpperCase()}
