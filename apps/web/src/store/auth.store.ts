@@ -82,7 +82,7 @@ export const useAuthStore = create<AuthState>()(
           const res = await authApi.me();
           set({ user: res.data, isHydrated: true });
         } catch (err) {
-          // Only clear auth on 401, not network errors
+          
           const isUnauthorized =
             err instanceof Error &&
             (err.message.includes('401') || err.message.toLowerCase().includes('unauthorized'));
@@ -90,7 +90,7 @@ export const useAuthStore = create<AuthState>()(
             localStorage.removeItem('vyro_token');
             set({ user: null, token: null, isHydrated: true });
           } else {
-            // Network error — keep existing state, just mark hydrated
+            
             set({ isHydrated: true });
           }
         }
@@ -101,8 +101,7 @@ export const useAuthStore = create<AuthState>()(
     {
       name: 'vyro-auth',
       partialize: (state) => ({ token: state.token, user: state.user }),
-      // After rehydration from localStorage, set isHydrated = true if no token
-      // (if there is a token, fetchMe will set it after verifying)
+      
       onRehydrateStorage: () => (state) => {
         if (state && !state.token) {
           state.isHydrated = true;
