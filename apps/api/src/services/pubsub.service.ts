@@ -1,16 +1,11 @@
 import { env } from '../config/env.js';
-/**
- * Redis Pub/Sub for scalable WebSocket broadcasting.
- * When a message is published to a room channel, ALL API instances
- * receive it and forward to their local WebSocket clients.
- */
+
 import Redis from 'ioredis';
 import dotenv from 'dotenv';
 dotenv.config();
 
 const REDIS_URL = env.REDIS_URL;
 
-// Separate Redis connections for pub and sub (ioredis requirement)
 let pubClient: Redis | null = null;
 let subClient: Redis | null = null;
 
@@ -34,9 +29,6 @@ export function roomChannel(roomId: string): string {
   return `room:${roomId}:events`;
 }
 
-/**
- * Publish an event to all instances handling this room.
- */
 export async function publishToRoom(roomId: string, event: object): Promise<void> {
   try {
     await getPubClient().publish(roomChannel(roomId), JSON.stringify(event));
@@ -45,10 +37,6 @@ export async function publishToRoom(roomId: string, event: object): Promise<void
   }
 }
 
-/**
- * Subscribe to room events. The handler is called for every message.
- * Returns an unsubscribe function.
- */
 export function subscribeToRoom(
   roomId: string,
   handler: (event: unknown) => void
@@ -65,7 +53,7 @@ export function subscribeToRoom(
     try {
       handler(JSON.parse(msg));
     } catch {
-      // ignore parse errors
+      
     }
   };
 
@@ -77,23 +65,21 @@ export function subscribeToRoom(
   };
 }
 
-// ── Room state in Redis ────────────────────────────────────────────────────────
-
 export interface RoomStateRedis {
   activeProblemId: string | null;
-  timerEnd: number | null;          // Unix ms
+  timerEnd: number | null;          
   mode: 'practice' | 'contest' | 'pair';
-  sharedCode: Record<string, string>; // languageId → code
-  lockedBy: string | null;           // userId locking shared code
+  sharedCode: Record<string, string>; 
+  lockedBy: string | null;           
 }
 
-const STATE_TTL = 60 * 60 * 4; // 4 hours
+const STATE_TTL = 60 * 60 * 4; 
 
 export async function getRoomState(roomId: string): Promise<RoomStateRedis> {
   const { getRedis } = await import('./redis.service.js');
   const raw = await getRedis().get(`room:${roomId}:state`);
   if (raw) {
-    try { return JSON.parse(raw) as RoomStateRedis; } catch { /* fallthrough */ }
+    try { return JSON.parse(raw) as RoomStateRedis; } catch {  }
   }
   return {
     activeProblemId: null,
@@ -115,8 +101,6 @@ export async function setRoomState(
   return next;
 }
 
-// ── Presence in Redis ──────────────────────────────────────────────────────────
-
 export interface UserPresence {
   userId: string;
   username: string;
@@ -126,7 +110,7 @@ export interface UserPresence {
   lastSeen: number;
 }
 
-const PRESENCE_TTL = 30; // seconds — refreshed on heartbeat
+const PRESENCE_TTL = 30; 
 
 export async function setPresence(roomId: string, presence: UserPresence): Promise<void> {
   const { getRedis } = await import('./redis.service.js');
