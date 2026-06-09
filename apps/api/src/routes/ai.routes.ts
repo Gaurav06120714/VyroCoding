@@ -1,19 +1,3 @@
-/**
- * AI routes — Ollama-first with NVIDIA NIM fallback
- *
- * Endpoints:
- *   GET  /ai/status              — Which provider / model is active
- *   GET  /ai/ollama/setup        — Full Ollama installation + model status
- *   POST /ai/ollama/start        — Start the Ollama daemon (if installed)
- *   POST /ai/ollama/pull         — SSE: pull the recommended model with progress
- *   POST /ai/ollama/auto-setup   — SSE: full zero-click auto-setup (start + pull)
- *   POST /ai/hint                — Non-spoiler hint (SSE)
- *   POST /ai/explain             — Code explanation (SSE)
- *   POST /ai/review              — Code review (SSE)
- *   POST /ai/debug               — Debug help (SSE)
- *   POST /ai/chat                — Free-form multi-turn chat (SSE)
- */
-
 import { FastifyInstance, FastifyReply } from 'fastify';
 import { authenticate } from '../middleware/auth.js';
 import {
@@ -28,8 +12,6 @@ import { queryOne } from '../db/client.js';
 import { submitBatchAndWait, submitAndWait, normalizeOutput } from '../services/judge0.service.js';
 import type { Language } from '@vyro/types';
 import { SubmissionStatus } from '@vyro/types';
-
-// ── Validation ────────────────────────────────────────────────────────────────
 
 const MAX_CODE    = 10_000;
 const MAX_MSG     = 2_000;
@@ -54,11 +36,8 @@ function sanitizeHistory(history: unknown): AiMessage[] {
     .map((m) => ({ role: m.role, content: m.content.slice(0, MAX_MSG) }));
 }
 
-// ── SSE helpers ───────────────────────────────────────────────────────────────
-
 function sseOpen(reply: FastifyReply): void {
-  // Carry forward CORS headers that @fastify/cors set via reply.header() —
-  // reply.raw.writeHead() bypasses Fastify's header store, so we must merge them manually.
+  
   const fastifyHeaders = reply.getHeaders();
   const corsHeaders: Record<string, string> = {};
   for (const key of Object.keys(fastifyHeaders)) {
@@ -95,25 +74,18 @@ function sseJson(reply: FastifyReply, event: string, data: unknown): void {
   reply.raw.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
 }
 
-// ── Route plugin ──────────────────────────────────────────────────────────────
-
 export async function aiRoutes(fastify: FastifyInstance): Promise<void> {
 
-  // ── GET /ai/status ──────────────────────────────────────────────────────────
   fastify.get('/status', async (_req, reply) => {
     const status = await getAiStatus();
     return reply.send(status);
   });
 
-  // ── GET /ai/ollama/setup ────────────────────────────────────────────────────
-  // Returns detailed Ollama installation state for the frontend setup modal.
   fastify.get('/ollama/setup', async (_req, reply) => {
     const status = await getOllamaSetupStatus();
     return reply.send(status);
   });
 
-  // ── POST /ai/ollama/start ───────────────────────────────────────────────────
-  // Attempt to start the Ollama daemon in the background.
   fastify.post('/ollama/start', async (_req, reply) => {
     const alreadyRunning = await isOllamaRunning();
     if (alreadyRunning) {
@@ -131,12 +103,9 @@ export async function aiRoutes(fastify: FastifyInstance): Promise<void> {
       .send({ success: false, error: 'Could not start Ollama daemon.' });
   });
 
-  // ── POST /ai/ollama/pull ────────────────────────────────────────────────────
-  // SSE stream: pulls the requested model (or recommended default) with progress.
   fastify.post<{ Body: { model?: string } }>('/ollama/pull', async (request, reply) => {
     const targetModel = request.body?.model ?? PREFERRED_MODELS[0];
 
-    // Validate model name — allow only alphanumeric + colon + dot + dash
     if (!/^[\w:.-]+$/.test(targetModel) || targetModel.length > 100) {
       return reply.code(400).send({ error: 'Invalid model name.' });
     }
@@ -157,9 +126,6 @@ export async function aiRoutes(fastify: FastifyInstance): Promise<void> {
     reply.raw.end();
   });
 
-  // ── POST /ai/ollama/auto-setup ─────────────────────────────────────────────
-  // SSE stream: full zero-click setup — start daemon + pull smallest model.
-  // Stages emitted: 'checking' | 'starting' | 'pulling' | 'complete' | 'error'
   fastify.post('/ollama/auto-setup', async (_request, reply) => {
     sseOpen(reply);
     sseJson(reply, 'stage', { stage: 'checking', message: 'Checking Ollama installation…' });
@@ -183,7 +149,6 @@ export async function aiRoutes(fastify: FastifyInstance): Promise<void> {
     reply.raw.end();
   });
 
-  // ── POST /ai/hint ───────────────────────────────────────────────────────────
   fastify.post<{
     Body: { problemTitle: string; problemDescription: string; userCode: string; language: string };
   }>('/hint', { preHandler: authenticate }, async (request, reply) => {
@@ -207,7 +172,6 @@ export async function aiRoutes(fastify: FastifyInstance): Promise<void> {
     }
   });
 
-  // ── POST /ai/explain ────────────────────────────────────────────────────────
   fastify.post<{ Body: { userCode: string; language: string } }>(
     '/explain', { preHandler: authenticate }, async (request, reply) => {
       const { userCode, language } = request.body;
@@ -229,7 +193,6 @@ export async function aiRoutes(fastify: FastifyInstance): Promise<void> {
     },
   );
 
-  // ── POST /ai/review ─────────────────────────────────────────────────────────
   fastify.post<{ Body: { userCode: string; language: string; problemTitle?: string } }>(
     '/review', { preHandler: authenticate }, async (request, reply) => {
       const { userCode, language, problemTitle } = request.body;
@@ -252,7 +215,6 @@ export async function aiRoutes(fastify: FastifyInstance): Promise<void> {
     },
   );
 
-  // ── POST /ai/debug ──────────────────────────────────────────────────────────
   fastify.post<{
     Body: { userCode: string; language: string; errorOutput: string; stdin?: string };
   }>('/debug', { preHandler: authenticate }, async (request, reply) => {
@@ -276,9 +238,6 @@ export async function aiRoutes(fastify: FastifyInstance): Promise<void> {
     }
   });
 
-  // ── POST /ai/solve ──────────────────────────────────────────────────────────
-  // Generates a verified AI solution for a problem, with up to 3 retry attempts.
-  // Streams the final verified solution code via SSE.
   fastify.post<{
     Body: {
       problemTitle: string;
@@ -302,7 +261,6 @@ export async function aiRoutes(fastify: FastifyInstance): Promise<void> {
       return reply.code(404).send({ error: 'Problem not found' });
     }
 
-    // Only use visible test cases for verification during solve
     const visibleCases = problem.test_cases.filter((tc) => !tc.isHidden);
 
     sseOpen(reply);
@@ -312,7 +270,7 @@ export async function aiRoutes(fastify: FastifyInstance): Promise<void> {
     let lastFailureContext = '';
 
     for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-      // Build the prompt
+      
       const retrySection = lastFailureContext
         ? `\n\nYour previous solution failed:\n${lastFailureContext}\n\nFix the issue above.`
         : '';
@@ -339,7 +297,6 @@ Output ONLY a single \`\`\`${language.toLowerCase()} ... \`\`\` code block with 
         },
       ];
 
-      // Collect full streamed response
       let fullResponse = '';
       try {
         await streamCompletion(
@@ -357,17 +314,15 @@ Output ONLY a single \`\`\`${language.toLowerCase()} ... \`\`\` code block with 
         return;
       }
 
-      // Extract code block
       const codeMatch = fullResponse.match(/```(?:\w+)?\n([\s\S]*?)```/);
       if (!codeMatch) {
-        // No code block found — retry
+        
         lastFailureContext = 'No code block found in response. Output ONLY a fenced code block.';
         continue;
       }
 
       lastCode = codeMatch[1].trim();
 
-      // Verify against visible test cases (skip if none)
       if (visibleCases.length === 0) break;
 
       try {
@@ -383,13 +338,12 @@ Output ONLY a single \`\`\`${language.toLowerCase()} ... \`\`\` code block with 
           continue;
         }
         if (!firstFail) {
-          // All visible tests passed — done
+          
           sseJson(reply, 'verified', { passed: true, attempts: attempt + 1 });
           sseDone(reply);
           return;
         }
 
-        // Build failure context for next retry
         const failIdx = testResults.indexOf(firstFail);
         lastFailureContext =
           `Test case ${failIdx + 1} failed.\n` +
@@ -403,13 +357,10 @@ Output ONLY a single \`\`\`${language.toLowerCase()} ... \`\`\` code block with 
       }
     }
 
-    // Emit final result even if not all tests passed after retries
     sseJson(reply, 'verified', { passed: false, attempts: MAX_RETRIES });
     sseDone(reply);
   });
 
-  // ── POST /ai/verify-solution ─────────────────────────────────────────────────
-  // Verifies a given solution against all test cases and returns detailed results.
   fastify.post<{
     Body: { code: string; languageId: number; problemId: string };
   }>('/verify-solution', { preHandler: authenticate }, async (request, reply) => {
@@ -469,7 +420,6 @@ Output ONLY a single \`\`\`${language.toLowerCase()} ... \`\`\` code block with 
     }
   });
 
-  // ── POST /ai/chat ───────────────────────────────────────────────────────────
   fastify.post<{
     Body: { message: string; history?: AiMessage[]; codeContext?: string; language?: string };
   }>('/chat', { preHandler: authenticate }, async (request, reply) => {
