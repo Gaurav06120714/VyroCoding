@@ -2,7 +2,6 @@ import { pool } from './client.js';
 import dotenv from 'dotenv';
 dotenv.config();
 
-// Helper to build minimal starter code for a function name
 function js(fn: string, args: string, ret: string) {
   return `function ${fn}(${args}) {\n\n}\n\nconst input = JSON.parse(require('fs').readFileSync('/dev/stdin','utf8').trim());\nconsole.log(JSON.stringify(${fn}(...(Array.isArray(input[0]) ? input : [input]))));\n`;
 }
@@ -11,7 +10,7 @@ function py(fn: string, args: string) {
 }
 
 const problems = [
-  // ── EASY (20) ─────────────────────────────────────────────────────────────
+  
   {
     slug: 'reverse-string',
     title: 'Reverse a String',
@@ -253,7 +252,6 @@ const problems = [
     acceptanceRate: 74.5,
   },
 
-  // ── MEDIUM (50) ───────────────────────────────────────────────────────────
   {
     slug: 'two-sum',
     title: 'Two Sum',
@@ -855,7 +853,6 @@ const problems = [
     acceptanceRate: 38.9,
   },
 
-  // ── HARD (30) ─────────────────────────────────────────────────────────────
   {
     slug: 'median-two-sorted-arrays',
     title: 'Median of Two Sorted Arrays',
