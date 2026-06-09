@@ -1,9 +1,5 @@
 'use client';
 
-/**
- * ReactionOverlay — floating emoji reactions that pop and fade.
- * Also includes the reaction picker trigger button.
- */
 import { useState } from 'react';
 import { Smile } from 'lucide-react';
 import type { RoomReaction } from '@/hooks/useRoomWebSocket';
@@ -20,7 +16,7 @@ export function ReactionOverlay({ reactions, onSendReaction }: ReactionOverlayPr
 
   return (
     <>
-      {/* Floating reactions */}
+      {}
       <div className="fixed bottom-20 right-6 pointer-events-none z-50 flex flex-col-reverse gap-2">
         {reactions.map((r) => (
           <div
@@ -33,7 +29,7 @@ export function ReactionOverlay({ reactions, onSendReaction }: ReactionOverlayPr
         ))}
       </div>
 
-      {/* Picker button */}
+      {}
       <div className="relative">
         <button
           onClick={() => setShowPicker((v) => !v)}
