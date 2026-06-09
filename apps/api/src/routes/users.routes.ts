@@ -15,7 +15,7 @@ interface DbUserProfile {
 }
 
 export async function usersRoutes(fastify: FastifyInstance): Promise<void> {
-  // GET /users/:username — public profile
+  
   fastify.get<{ Params: { username: string } }>('/:username', async (request, reply) => {
     const { username } = request.params;
 
