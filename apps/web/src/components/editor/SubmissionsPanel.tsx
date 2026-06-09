@@ -108,7 +108,7 @@ export function SubmissionsPanel({ slug }: SubmissionsPanelProps) {
         })}
       </div>
 
-      {/* Code viewer modal */}
+      {}
       {selected && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-[#161b22] border border-white/[0.1] rounded-xl w-full max-w-3xl h-[70vh] flex flex-col shadow-2xl">
