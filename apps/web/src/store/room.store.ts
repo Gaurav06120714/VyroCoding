@@ -42,7 +42,7 @@ export const useRoomStore = create<RoomState>((set) => ({
 
   addMessage: (message) =>
     set((state) => ({
-      messages: [...state.messages, message].slice(-200), // Keep last 200 messages
+      messages: [...state.messages, message].slice(-200), 
     })),
 
   setMessages: (messages) => set({ messages }),
