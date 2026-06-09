@@ -172,7 +172,7 @@ export default function AdminPage() {
   useEffect(() => {
     if (!isAdmin) { router.replace('/dashboard'); return; }
     loadData();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  
   }, [isAdmin]);
 
   const loadData = async () => {
@@ -222,13 +222,13 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-canvas p-6">
       <div className="max-w-6xl mx-auto">
-        {/* Header */}
+        {}
         <div className="mb-6">
           <h1 className="text-xl font-bold text-ink">Admin Panel</h1>
           <p className="text-sm text-ink-subtle mt-0.5">Manage problems, rooms, and submissions.</p>
         </div>
 
-        {/* Stats */}
+        {}
         {stats && (
           <div className="grid grid-cols-4 gap-3 mb-6">
             {[
@@ -245,7 +245,7 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* Tabs */}
+        {}
         <div className="flex gap-1 border-b border-hairline mb-5">
           {(['problems', 'rooms', 'submissions'] as Tab[]).map((t) => (
             <button
@@ -260,7 +260,7 @@ export default function AdminPage() {
           ))}
         </div>
 
-        {/* Problems tab */}
+        {}
         {tab === 'problems' && (
           <div>
             <div className="flex justify-end mb-3">
@@ -327,7 +327,7 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* Rooms tab */}
+        {}
         {tab === 'rooms' && (
           <div className="bg-surface1 border border-hairline rounded-xl overflow-hidden">
             <table className="w-full text-sm">
@@ -369,7 +369,7 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* Submissions tab */}
+        {}
         {tab === 'submissions' && (
           <div className="bg-surface1 border border-hairline rounded-xl overflow-hidden">
             <table className="w-full text-sm">
