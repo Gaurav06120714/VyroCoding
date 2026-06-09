@@ -47,7 +47,6 @@ export function RoomScoreboard({ roomId, lastSubmissionResult }: RoomScoreboardP
       .finally(() => setLoading(false));
   }, [roomId]);
 
-  // Prepend new accepted submission from WS
   useEffect(() => {
     if (!lastSubmissionResult) return;
     setEntries((prev) => {
@@ -82,7 +81,7 @@ export function RoomScoreboard({ roomId, lastSubmissionResult }: RoomScoreboardP
             key={entry.id}
             className="flex items-center gap-2.5 px-3 py-2.5 border-b border-hairline last:border-0"
           >
-            {/* Rank */}
+            {}
             <span
               className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0"
               style={{
@@ -93,7 +92,7 @@ export function RoomScoreboard({ roomId, lastSubmissionResult }: RoomScoreboardP
               {idx + 1}
             </span>
 
-            {/* Username + language */}
+            {}
             <div className="flex-1 min-w-0">
               <p className="text-xs font-medium text-ink truncate">{entry.username}</p>
               <p className="text-[10px] text-ink-tertiary">
@@ -101,7 +100,7 @@ export function RoomScoreboard({ roomId, lastSubmissionResult }: RoomScoreboardP
               </p>
             </div>
 
-            {/* Time + relative */}
+            {}
             <div className="text-right shrink-0">
               <p className="text-xs font-mono text-easy">{formatMs(entry.time_ms)}</p>
               <p className="text-[10px] text-ink-tertiary">{relativeTime(entry.created_at)}</p>
