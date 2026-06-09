@@ -4,9 +4,6 @@ import { Fragment } from 'react';
 import type { Problem } from '@vyro/types';
 import { cn } from '@/lib/utils';
 
-// ── Inline markdown tokenizer ─────────────────────────────────────────────────
-// Handles: **bold**, *italic*, `code`, ~~strike~~, no XSS
-
 type InlineToken =
   | { type: 'text'; content: string }
   | { type: 'bold'; content: string }
@@ -16,7 +13,7 @@ type InlineToken =
 
 function tokenizeInline(text: string): InlineToken[] {
   const tokens: InlineToken[] = [];
-  // Pattern priority: code > bold > italic > strike
+  
   const re = /(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*|~~[^~]+~~)/g;
   let last = 0;
   let m: RegExpExecArray | null;
