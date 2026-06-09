@@ -19,7 +19,7 @@ interface SignalMessage {
 
 interface AnalyserEntry {
   analyser: AnalyserNode;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  
   data: any;
 }
 
@@ -46,7 +46,6 @@ export function useVoiceChat(
   const speakingTimers  = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const remoteAudios    = useRef<Map<string, HTMLAudioElement>>(new Map());
 
-  // ── Helpers ────────────────────────────────────────────────────────────
   function signal(msg: Omit<SignalMessage, 'from'>) {
     if (!signalingWs || signalingWs.readyState !== WebSocket.OPEN) return;
     signalingWs.send(JSON.stringify({ ...msg, from: userId }));
@@ -69,7 +68,6 @@ export function useVoiceChat(
     analyserRefs.current.delete(uid);
   }
 
-  // ── Speaking detection ─────────────────────────────────────────────────
   function trackSpeaking(uid: string, stream: MediaStream) {
     if (!audioCtxRef.current) audioCtxRef.current = new AudioContext();
     const ctx = audioCtxRef.current;
@@ -93,21 +91,17 @@ export function useVoiceChat(
     check();
   }
 
-  // ── Create peer connection ─────────────────────────────────────────────
   function createPeer(remoteId: string, initiator: boolean): RTCPeerConnection {
     const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
 
-    // Add local tracks
     localStreamRef.current?.getTracks().forEach((t) => pc.addTrack(t, localStreamRef.current!));
 
-    // ICE candidates
     pc.onicecandidate = (e) => {
       if (e.candidate) {
         signal({ type: 'voice-ice', to: remoteId, payload: e.candidate.toJSON() });
       }
     };
 
-    // Remote stream → audio element
     pc.ontrack = (e) => {
       const stream = e.streams[0];
       let audio = remoteAudios.current.get(remoteId);
@@ -133,7 +127,6 @@ export function useVoiceChat(
     return pc;
   }
 
-  // ── Handle incoming signaling messages ────────────────────────────────
   const handleSignal = useCallback(async (msg: SignalMessage) => {
     if (!['voice-offer','voice-answer','voice-ice','voice-join','voice-leave','voice-mute'].includes(msg.type)) return;
     if (msg.to && msg.to !== userId) return;
@@ -178,7 +171,6 @@ export function useVoiceChat(
     }
   }, [inVoice, userId, username]);
 
-  // Wire up WebSocket message handling
   useEffect(() => {
     if (!signalingWs) return;
     const handler = (event: MessageEvent) => {
@@ -186,14 +178,13 @@ export function useVoiceChat(
         const msg = JSON.parse(event.data) as SignalMessage;
         handleSignal(msg);
       } catch {
-        // ignore non-JSON messages
+        
       }
     };
     signalingWs.addEventListener('message', handler);
     return () => signalingWs.removeEventListener('message', handler);
   }, [signalingWs, handleSignal]);
 
-  // ── Join voice ─────────────────────────────────────────────────────────
   const joinVoice = useCallback(async () => {
     setMicError(null);
     try {
@@ -208,7 +199,6 @@ export function useVoiceChat(
     }
   }, [signalingWs, userId, username]);
 
-  // ── Leave voice ────────────────────────────────────────────────────────
   const leaveVoice = useCallback(() => {
     signal({ type: 'voice-leave' });
     localStreamRef.current?.getTracks().forEach((t) => t.stop());
@@ -222,18 +212,16 @@ export function useVoiceChat(
     setParticipants([]);
   }, [signalingWs]);
 
-  // ── Toggle mute ────────────────────────────────────────────────────────
   const toggleMute = useCallback(() => {
     const track = localStreamRef.current?.getAudioTracks()[0];
     if (!track) return;
-    track.enabled = micMuted; // flip
+    track.enabled = micMuted; 
     const newMuted = !micMuted;
     setMicMuted(newMuted);
     updateParticipant(userId, { muted: newMuted });
     signal({ type: 'voice-mute', payload: { muted: newMuted, username } });
   }, [micMuted, userId, username, signalingWs]);
 
-  // Cleanup on unmount
   useEffect(() => () => { leaveVoice(); }, []);
 
   return { inVoice, micMuted, participants, micError, joinVoice, leaveVoice, toggleMute };
