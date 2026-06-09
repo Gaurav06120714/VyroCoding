@@ -34,7 +34,7 @@ export function Sidebar() {
 
   return (
     <aside className="lg-sidebar w-56 h-screen flex flex-col fixed left-0 top-0 z-40">
-      {/* Logo */}
+      {}
       <Link href="/" className="h-14 flex items-center gap-2.5 px-4 border-b border-white/5 shrink-0 hover:bg-white/[0.04] transition-colors">
         <div className="lg-btn-primary flex items-center justify-center w-7 h-7 !px-0 !rounded-[9px] shrink-0">
           <Code2 className="w-4 h-4 text-white" />
@@ -42,7 +42,7 @@ export function Sidebar() {
         <span className="font-semibold text-base text-white">Vyro Coding</span>
       </Link>
 
-      {/* Navigation */}
+      {}
       <nav className="flex-1 overflow-y-auto py-3 px-2">
         <ul className="space-y-0.5">
           {navItems.map(({ href, label, icon: Icon }) => {
@@ -70,10 +70,10 @@ export function Sidebar() {
         </ul>
       </nav>
 
-      {/* Subtle gradient before user section */}
+      {}
       <div className="h-8 bg-gradient-to-t from-black/30 to-transparent -mt-8 pointer-events-none" />
 
-      {/* User section */}
+      {}
       <div className="p-3 border-t border-white/[0.06]">
         {user ? (
           <div className="space-y-0.5">
@@ -86,7 +86,7 @@ export function Sidebar() {
                 <p className="text-xs text-white/40">Rating: {user.rating}</p>
               </div>
             </Link>
-            {/* Admin link if applicable */}
+            {}
             {user?.username === 'Gannu' && (
               <Link
                 href="/admin"
@@ -96,7 +96,7 @@ export function Sidebar() {
                 Admin
               </Link>
             )}
-            {/* Theme toggle */}
+            {}
             <button
               onClick={toggleTheme}
               className="flex items-center gap-3 w-full text-sm font-medium text-white/40 hover:text-white hover:bg-[rgba(0,212,255,0.06)] rounded-[11px] px-3 py-2 transition-colors"
