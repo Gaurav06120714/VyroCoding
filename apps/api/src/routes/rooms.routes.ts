@@ -14,8 +14,6 @@ import {
   type UserPresence,
 } from '../services/pubsub.service.js';
 
-// ── Avatar colors for live cursors ────────────────────────────────────────────
-
 const CURSOR_COLORS = [
   '#828fff', '#27a644', '#f59e0b', '#e5534b', '#06b6d4',
   '#a78bfa', '#fb7185', '#34d399', '#fbbf24', '#60a5fa',
@@ -27,11 +25,8 @@ function pickColor(userId: string): string {
   return CURSOR_COLORS[Math.abs(hash) % CURSOR_COLORS.length];
 }
 
-// ── In-process WebSocket registry (per API instance) ─────────────────────────
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const roomSockets = new Map<string, Map<string, any>>(); // roomId → Map<userId, ws>
+const roomSockets = new Map<string, Map<string, any>>(); 
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function broadcastLocal(roomId: string, data: unknown, excludeUserId?: string): void {
   const sockets = roomSockets.get(roomId);
   if (!sockets) return;
@@ -43,15 +38,12 @@ function broadcastLocal(roomId: string, data: unknown, excludeUserId?: string): 
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function sendToUser(roomId: string, userId: string, data: unknown): void {
   const ws = roomSockets.get(roomId)?.get(userId);
   if (ws && ws.readyState === ws.OPEN) {
     ws.send(JSON.stringify(data));
   }
 }
-
-// ── DB helpers ─────────────────────────────────────────────────────────────────
 
 interface DbRoom {
   id: string;
@@ -69,7 +61,6 @@ interface DbRoom {
   created_at: string;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function toRoom(row: DbRoom): Room {
   return {
     id: row.id,
@@ -122,11 +113,8 @@ async function assignDefaultProblems(roomId: string): Promise<void> {
   }
 }
 
-// ── Routes ────────────────────────────────────────────────────────────────────
-
 export async function roomsRoutes(fastify: FastifyInstance): Promise<void> {
 
-  // GET /rooms
   fastify.get<{ Querystring: { status?: string; page?: string } }>('/', async (request, reply) => {
     const { status = 'waiting', page = '1' } = request.query;
     const offset = (parseInt(page, 10) - 1) * 20;
@@ -139,7 +127,6 @@ export async function roomsRoutes(fastify: FastifyInstance): Promise<void> {
     return reply.send({ data: rows.map(toRoom) });
   });
 
-  // POST /rooms
   fastify.post<{ Body: CreateRoomRequest }>('/', { preHandler: authenticate }, async (request, reply) => {
     const { userId } = request.user as { userId: string };
     const { name, isPublic = true, maxParticipants = 4 } = request.body;
@@ -156,7 +143,6 @@ export async function roomsRoutes(fastify: FastifyInstance): Promise<void> {
     return reply.code(201).send({ data: toRoom(room!) });
   });
 
-  // GET /rooms/:id
   fastify.get<{ Params: { id: string } }>('/:id', async (request, reply) => {
     const { id } = request.params;
     const room = await queryOne<DbRoom>(
@@ -176,7 +162,6 @@ export async function roomsRoutes(fastify: FastifyInstance): Promise<void> {
       [id]
     );
 
-    // Include Redis room state
     const state = await getRoomState(id);
 
     return reply.send({
@@ -193,7 +178,6 @@ export async function roomsRoutes(fastify: FastifyInstance): Promise<void> {
     });
   });
 
-  // GET /rooms/:id/problems
   fastify.get<{ Params: { id: string } }>('/:id/problems', async (request, reply) => {
     const { id } = request.params;
     const problems = await query<{ id: string; slug: string; title: string; difficulty: string; sort_order: number }>(
@@ -204,21 +188,18 @@ export async function roomsRoutes(fastify: FastifyInstance): Promise<void> {
     return reply.send({ data: problems });
   });
 
-  // GET /rooms/:id/presence — live user presence
   fastify.get<{ Params: { id: string } }>('/:id/presence', async (request, reply) => {
     const { id } = request.params;
     const presence = await getPresence(id);
     return reply.send({ data: presence });
   });
 
-  // GET /rooms/:id/state — room state from Redis
   fastify.get<{ Params: { id: string } }>('/:id/state', async (request, reply) => {
     const { id } = request.params;
     const state = await getRoomState(id);
     return reply.send({ data: state });
   });
 
-  // POST /rooms/:id/join
   fastify.post<{ Params: { id: string } }>('/:id/join', { preHandler: authenticate }, async (request, reply) => {
     const { userId } = request.user as { userId: string };
     const { id } = request.params;
@@ -233,7 +214,6 @@ export async function roomsRoutes(fastify: FastifyInstance): Promise<void> {
     return reply.send({ data: { joined: true } });
   });
 
-  // DELETE /rooms/:id/leave
   fastify.delete<{ Params: { id: string } }>('/:id/leave', { preHandler: authenticate }, async (request, reply) => {
     const { userId } = request.user as { userId: string };
     const { id } = request.params;
@@ -243,7 +223,6 @@ export async function roomsRoutes(fastify: FastifyInstance): Promise<void> {
     return reply.send({ data: { left: true } });
   });
 
-  // DELETE /rooms/:id
   fastify.delete<{ Params: { id: string } }>('/:id', { preHandler: authenticate }, async (request, reply) => {
     const { userId } = request.user as { userId: string };
     const { id } = request.params;
@@ -255,7 +234,6 @@ export async function roomsRoutes(fastify: FastifyInstance): Promise<void> {
     return reply.send({ data: { deleted: true } });
   });
 
-  // PATCH /rooms/:id/active-problem
   fastify.patch<{ Params: { id: string }; Body: { problemId: string } }>(
     '/:id/active-problem', { preHandler: authenticate }, async (request, reply) => {
       const { userId } = request.user as { userId: string };
@@ -273,7 +251,6 @@ export async function roomsRoutes(fastify: FastifyInstance): Promise<void> {
     }
   );
 
-  // PATCH /rooms/:id/timer
   fastify.patch<{ Params: { id: string }; Body: { durationMinutes: number } }>(
     '/:id/timer', { preHandler: authenticate }, async (request, reply) => {
       const { userId } = request.user as { userId: string };
@@ -289,7 +266,6 @@ export async function roomsRoutes(fastify: FastifyInstance): Promise<void> {
     }
   );
 
-  // PATCH /rooms/:id/status
   fastify.patch<{ Params: { id: string }; Body: { status: string } }>(
     '/:id/status', { preHandler: authenticate }, async (request, reply) => {
       const { userId } = request.user as { userId: string };
@@ -304,7 +280,6 @@ export async function roomsRoutes(fastify: FastifyInstance): Promise<void> {
     }
   );
 
-  // PATCH /rooms/:id/mode — set room mode (practice/contest/pair)
   fastify.patch<{ Params: { id: string }; Body: { mode: 'practice' | 'contest' | 'pair' } }>(
     '/:id/mode', { preHandler: authenticate }, async (request, reply) => {
       const { userId } = request.user as { userId: string };
@@ -319,7 +294,6 @@ export async function roomsRoutes(fastify: FastifyInstance): Promise<void> {
     }
   );
 
-  // GET /rooms/:id/scoreboard
   fastify.get<{ Params: { id: string } }>('/:id/scoreboard', async (request, reply) => {
     const { id } = request.params;
     const rows = await query<{
@@ -335,8 +309,6 @@ export async function roomsRoutes(fastify: FastifyInstance): Promise<void> {
     return reply.send({ data: rows });
   });
 
-  // ── WebSocket /:id/ws ────────────────────────────────────────────────────────
-
   fastify.get<{ Params: { id: string }; Querystring: { token?: string } }>(
     '/:id/ws',
     { websocket: true } as Parameters<typeof fastify.get>[1],
@@ -344,7 +316,6 @@ export async function roomsRoutes(fastify: FastifyInstance): Promise<void> {
       const roomId = request.params.id;
       const ws = connection.socket;
 
-      // ── Auth via token query param ─────────────────────────────────────────
       let userId = 'anon';
       let username = 'Anonymous';
       const token = request.query.token;
@@ -352,42 +323,36 @@ export async function roomsRoutes(fastify: FastifyInstance): Promise<void> {
         try {
           const decoded = fastify.jwt.verify(token) as { userId: string; username?: string };
           userId = decoded.userId;
-          // Fetch username from DB
+          
           const u = await queryOne<{ username: string }>('SELECT username FROM users WHERE id = $1', [userId]);
           if (u) username = u.username;
         } catch {
-          // Invalid token — allow as anon
+          
         }
       }
 
       const userColor = pickColor(userId);
 
-      // ── Register socket ─────────────────────────────────────────────────────
       if (!roomSockets.has(roomId)) roomSockets.set(roomId, new Map());
       roomSockets.get(roomId)!.set(userId, ws);
 
-      // ── Set initial presence ────────────────────────────────────────────────
       const initialPresence: UserPresence = {
         userId, username, color: userColor,
         language: 93, isTyping: false, lastSeen: Date.now(),
       };
       await setPresence(roomId, initialPresence);
 
-      // ── Subscribe to Redis pub/sub for this room ────────────────────────────
-      // (forwards events published from OTHER API instances to local WS clients)
       const unsubscribe = subscribeToRoom(roomId, (event) => {
-        // Don't re-broadcast events that came from this socket
+        
         if (ws.readyState === ws.OPEN) {
           ws.send(JSON.stringify(event));
         }
       });
 
-      // ── Announce join to room ───────────────────────────────────────────────
       const joinEvent = { type: 'room-join', userId, username, color: userColor };
-      broadcastLocal(roomId, joinEvent, userId); // local
-      await publishToRoom(roomId, joinEvent);    // other instances
+      broadcastLocal(roomId, joinEvent, userId); 
+      await publishToRoom(roomId, joinEvent);    
 
-      // ── Send current room state to the new joiner ───────────────────────────
       const [roomState, presence] = await Promise.all([
         getRoomState(roomId),
         getPresence(roomId),
@@ -398,13 +363,11 @@ export async function roomsRoutes(fastify: FastifyInstance): Promise<void> {
         presence,
       }));
 
-      // ── Heartbeat — refresh presence every 10s ──────────────────────────────
       const heartbeatInterval = setInterval(async () => {
         if (ws.readyState !== ws.OPEN) { clearInterval(heartbeatInterval); return; }
         await setPresence(roomId, { ...initialPresence, lastSeen: Date.now() });
       }, 10_000);
 
-      // ── Message handler ─────────────────────────────────────────────────────
       ws.on('message', async (raw: Buffer) => {
         let msg: Record<string, unknown>;
         try { msg = JSON.parse(raw.toString()) as Record<string, unknown>; }
@@ -413,30 +376,28 @@ export async function roomsRoutes(fastify: FastifyInstance): Promise<void> {
         const type = msg.type as string;
 
         switch (type) {
-          // ── Code sync (Yjs delta or full snapshot) ─────────────────────────
+          
           case 'code-update': {
             const { code, language: lang } = msg as { code: string; language: number };
-            // Store in Redis room state
+            
             const state = await getRoomState(roomId);
             state.sharedCode[String(lang)] = code;
             await setRoomState(roomId, { sharedCode: state.sharedCode });
-            // Broadcast delta to others
+            
             const broadcast = { type: 'code-update', code, language: lang, userId, username };
             broadcastLocal(roomId, broadcast, userId);
             await publishToRoom(roomId, broadcast);
             break;
           }
 
-          // ── Cursor position ────────────────────────────────────────────────
           case 'cursor-update': {
             const { line, column, language: lang } = msg as { line: number; column: number; language: number };
             const broadcast = { type: 'cursor-update', userId, username, color: userColor, line, column, language: lang };
             broadcastLocal(roomId, broadcast, userId);
-            // Cursor updates are high-frequency — don't Redis-broadcast to avoid flooding
+            
             break;
           }
 
-          // ── Typing indicator ───────────────────────────────────────────────
           case 'typing': {
             const { isTyping } = msg as { isTyping: boolean };
             await setPresence(roomId, { ...initialPresence, isTyping, lastSeen: Date.now() });
@@ -446,7 +407,6 @@ export async function roomsRoutes(fastify: FastifyInstance): Promise<void> {
             break;
           }
 
-          // ── Chat message ───────────────────────────────────────────────────
           case 'chat': {
             const { text } = msg as { text: string };
             if (!text?.trim() || text.length > 500) break;
@@ -459,7 +419,6 @@ export async function roomsRoutes(fastify: FastifyInstance): Promise<void> {
             break;
           }
 
-          // ── Execution events ───────────────────────────────────────────────
           case 'execution-start': {
             const broadcast = { type: 'execution-start', userId, username };
             broadcastLocal(roomId, broadcast, userId);
@@ -487,7 +446,6 @@ export async function roomsRoutes(fastify: FastifyInstance): Promise<void> {
             break;
           }
 
-          // ── Voice/WebRTC signaling ──────────────────────────────────────────
           case 'voice-join': {
             const broadcast = { type: 'voice-join', userId, username };
             broadcastLocal(roomId, broadcast, userId);
@@ -519,7 +477,6 @@ export async function roomsRoutes(fastify: FastifyInstance): Promise<void> {
             break;
           }
 
-          // ── Language change ────────────────────────────────────────────────
           case 'language-change': {
             const { language: lang } = msg as { language: number };
             await setPresence(roomId, { ...initialPresence, language: lang });
@@ -527,14 +484,12 @@ export async function roomsRoutes(fastify: FastifyInstance): Promise<void> {
             break;
           }
 
-          // ── Heartbeat ping ─────────────────────────────────────────────────
           case 'ping': {
             ws.send(JSON.stringify({ type: 'pong', ts: Date.now() }));
             await setPresence(roomId, { ...initialPresence, lastSeen: Date.now() });
             break;
           }
 
-          // ── Reaction ───────────────────────────────────────────────────────
           case 'reaction': {
             const { emoji } = msg as { emoji: string };
             if (!emoji) break;
@@ -543,12 +498,11 @@ export async function roomsRoutes(fastify: FastifyInstance): Promise<void> {
           }
 
           default:
-            // Forward unknown event types as-is (extensible)
+            
             broadcastLocal(roomId, { ...msg, userId }, userId);
         }
       });
 
-      // ── Close handler ───────────────────────────────────────────────────────
       ws.on('close', async () => {
         clearInterval(heartbeatInterval);
         unsubscribe();
@@ -567,7 +521,7 @@ export async function roomsRoutes(fastify: FastifyInstance): Promise<void> {
       });
 
       ws.on('error', () => {
-        // Handled by close event
+        
       });
     }
   );
