@@ -1,12 +1,3 @@
-/**
- * AI service — Ollama (local) with NVIDIA NIM (cloud) fallback
- *
- * Provider detection is cached for 60 s so we don't probe Ollama on every request.
- * All streaming calls include per-request abort timeouts and automatic retry on
- * transient failures so the front-end gets a response even when the local daemon
- * hiccups.
- */
-
 import OpenAI from 'openai';
 import { env } from '../config/env.js';
 import {
@@ -15,8 +6,6 @@ import {
   pickCodingModel,
   startOllamaDaemon,
 } from './ollama.service.js';
-
-// ── Provider cache ────────────────────────────────────────────────────────────
 
 interface AiProvider {
   client: OpenAI;
@@ -32,17 +21,13 @@ export function clearProviderCache(): void {
   _cacheExpiry = 0;
 }
 
-// ── Provider detection ────────────────────────────────────────────────────────
-
 export async function detectAiProvider(): Promise<AiProvider> {
   const now = Date.now();
   if (_cachedProvider && now < _cacheExpiry) return _cachedProvider;
 
-  // 1. Try local Ollama
   try {
     let running = await isOllamaRunning(800);
 
-    // If not running, attempt a background start (non-blocking — just 2 s wait)
     if (!running) {
       await startOllamaDaemon();
       running = await isOllamaRunning(2000);
@@ -64,10 +49,9 @@ export async function detectAiProvider(): Promise<AiProvider> {
       }
     }
   } catch {
-    // fall through to NIM
+    
   }
 
-  // 2. NVIDIA NIM fallback
   if (!env.NVIDIA_API_KEY) {
     throw new Error(
       'No AI provider available. Install Ollama (https://ollama.com) or ' +
@@ -85,8 +69,6 @@ export async function detectAiProvider(): Promise<AiProvider> {
   return nimResult;
 }
 
-// ── Status helper ─────────────────────────────────────────────────────────────
-
 export async function getAiStatus() {
   try {
     const { model, provider } = await detectAiProvider();
@@ -101,8 +83,6 @@ export async function getAiStatus() {
   }
 }
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-
 export interface AiMessage {
   role: 'user' | 'assistant' | 'system';
   content: string;
@@ -112,8 +92,6 @@ export interface StreamOptions {
   onChunk: (text: string) => void;
   onDone?: () => void;
 }
-
-// ── Retry helper ──────────────────────────────────────────────────────────────
 
 const RETRYABLE_CODES = new Set(['ECONNRESET', 'ECONNREFUSED', 'ETIMEDOUT', 'ENOTFOUND']);
 
@@ -135,7 +113,6 @@ async function withRetry<T>(
 
       if (!isRetryable || attempt === maxAttempts - 1) break;
 
-      // Invalidate cache so next attempt re-probes the provider
       clearProviderCache();
       await new Promise((r) => setTimeout(r, baseDelayMs * 2 ** attempt));
     }
@@ -143,9 +120,6 @@ async function withRetry<T>(
   throw lastErr;
 }
 
-// ── Core streaming helper ─────────────────────────────────────────────────────
-
-/** Timeout: 120 s for local Ollama (cold-start is slow), 60 s for cloud NIM */
 const TIMEOUT_OLLAMA_MS = 120_000;
 const TIMEOUT_NIM_MS    =  60_000;
 
@@ -169,12 +143,10 @@ export async function streamCompletion(
       stream: true,
     };
 
-    // DeepSeek-specific param — skip for Ollama / other providers
     if (!isOllama && model.toLowerCase().includes('deepseek')) {
       requestBody['extra_body'] = { chat_template_kwargs: { thinking: false } };
     }
 
-    // Per-request abort controller for timeout
     const controller = new AbortController();
     const timeoutId  = setTimeout(() => {
       controller.abort(new Error(`AI request timed out after ${timeoutMs / 1000}s`));
@@ -192,7 +164,6 @@ export async function streamCompletion(
         if (text) { opts.onChunk(text); receivedAny = true; }
       }
 
-      // If Ollama returned nothing (model loading / first cold start), retry
       if (!receivedAny && isOllama) {
         clearProviderCache();
         throw Object.assign(new Error('Empty response from Ollama — retrying'), { code: 'ECONNRESET' });
@@ -205,14 +176,10 @@ export async function streamCompletion(
   });
 }
 
-// ── System prompt ─────────────────────────────────────────────────────────────
-
 const SYSTEM_BASE = `You are an expert competitive programming assistant embedded inside VyroCoding, a real-time collaborative coding platform.
 You help developers understand algorithms, debug code, and improve their solutions.
 Be concise, precise, and technical. Use code blocks with language tags when showing code.
 Never reveal the full solution unless the user explicitly asks for it.`;
-
-// ── Feature: Hint ─────────────────────────────────────────────────────────────
 
 export async function streamHint(opts: {
   problemTitle: string;
@@ -243,8 +210,6 @@ Give me a small, non-spoiler hint that nudges me in the right direction. Do NOT 
   return streamCompletion(messages, { onChunk: opts.onChunk, onDone: opts.onDone }, 0.7);
 }
 
-// ── Feature: Explain ──────────────────────────────────────────────────────────
-
 export async function streamExplain(opts: {
   userCode: string;
   language: string;
@@ -266,8 +231,6 @@ Be concise. Cover: what it does, the algorithm/approach, time/space complexity i
   ];
   return streamCompletion(messages, { onChunk: opts.onChunk, onDone: opts.onDone }, 0.3);
 }
-
-// ── Feature: Review ───────────────────────────────────────────────────────────
 
 export async function streamReview(opts: {
   userCode: string;
@@ -292,8 +255,6 @@ Format your response with clear sections.`,
   ];
   return streamCompletion(messages, { onChunk: opts.onChunk, onDone: opts.onDone }, 0.4);
 }
-
-// ── Feature: Debug ────────────────────────────────────────────────────────────
 
 export async function streamDebug(opts: {
   userCode: string;
