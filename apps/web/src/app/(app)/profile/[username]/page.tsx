@@ -57,7 +57,7 @@ export default function UserProfilePage() {
 
   return (
     <div className="min-h-screen bg-canvas p-8 max-w-4xl mx-auto">
-      {/* Header */}
+      {}
       <div className="flex items-center gap-5 mb-8">
         <div className="w-16 h-16 rounded-full bg-[rgba(0,212,255,0.2)] border border-[rgba(130,143,255,0.3)] flex items-center justify-center shrink-0">
           <span className="text-2xl font-bold text-[#00d4ff]">
@@ -77,7 +77,7 @@ export default function UserProfilePage() {
         </div>
       </div>
 
-      {/* Stats row */}
+      {}
       <div className="grid grid-cols-3 gap-4 mb-8">
         <div className="lg-card p-5 text-center">
           <p className="text-2xl font-bold text-ink">{profile.problemsSolved}</p>
@@ -99,7 +99,7 @@ export default function UserProfilePage() {
         </div>
       </div>
 
-      {/* Recent Submissions */}
+      {}
       <div className="lg-card overflow-hidden">
         <div className="px-5 py-3 border-b border-hairline">
           <h2 className="text-sm font-semibold text-ink">Recent Submissions</h2>
