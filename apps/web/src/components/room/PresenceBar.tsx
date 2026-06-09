@@ -32,7 +32,7 @@ export function PresenceBar({
     <div className="flex items-center gap-2 px-2">
       <StatusDot status={wsStatus} />
 
-      {/* Avatar stack */}
+      {}
       <div className="flex items-center -space-x-1.5">
         {allUsers.slice(0, 5).map((u, i) => (
           <div
@@ -40,7 +40,7 @@ export function PresenceBar({
             title={`${u.username}${u.isTyping ? ' (typing…)' : ''}`}
             style={{ borderColor: u.color, zIndex: 10 - i }}
             className="relative w-6 h-6 rounded-full border-2 flex items-center justify-center text-[9px] font-bold text-white select-none"
-            // eslint-disable-next-line react/no-unknown-property
+            
           >
             <span
               className="w-full h-full rounded-full flex items-center justify-center"
@@ -64,7 +64,7 @@ export function PresenceBar({
         )}
       </div>
 
-      {/* Live language badges for first 3 remote users */}
+      {}
       <div className="hidden lg:flex items-center gap-1">
         {users.slice(0, 2).map((u) => (
           <span
