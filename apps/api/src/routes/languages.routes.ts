@@ -105,6 +105,22 @@ func main() {
     }
 }`,
   },
+  {
+    id: Language.Vyro,
+    name: 'VyroLang (native VyroVM)',
+    monacoId: 'plaintext',
+    version: 'Vyro 0.1',
+    starterTemplate: `// VyroLang — runs natively on the VyroVM.
+// Read input with input(); print results with print().
+
+func solution(n) {
+    // Write your solution here
+    return n
+}
+
+let n = int(input())
+print(solution(n))`,
+  },
 ];
 
 export async function languagesRoutes(fastify: FastifyInstance): Promise<void> {

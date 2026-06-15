@@ -35,6 +35,8 @@ export enum Language {
   TypeScript = 74,
   Go = 95,
   Rust = 73,
+  // Vyro is run natively by the VyroVM (not Judge0); id is outside Judge0's range.
+  Vyro = 9001,
 }
 
 export const LANGUAGE_NAMES: Record<Language, string> = {
@@ -45,6 +47,7 @@ export const LANGUAGE_NAMES: Record<Language, string> = {
   [Language.TypeScript]: 'TypeScript',
   [Language.Go]: 'Go',
   [Language.Rust]: 'Rust',
+  [Language.Vyro]: 'VyroLang',
 };
 
 export const LANGUAGE_MONACO_MAP: Record<Language, string> = {
@@ -55,6 +58,7 @@ export const LANGUAGE_MONACO_MAP: Record<Language, string> = {
   [Language.TypeScript]: 'typescript',
   [Language.Go]: 'go',
   [Language.Rust]: 'rust',
+  [Language.Vyro]: 'plaintext',
 };
 
 export interface User {

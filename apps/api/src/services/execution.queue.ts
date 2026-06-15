@@ -80,7 +80,7 @@ export function startExecutionWorker(): void {
     async (job: Job<ExecutionJobData, ExecutionJobResult>) => {
       const { submissionId, code, languageId, testCases, roomId, userId, username } = job.data;
 
-      const { submitAndWait, submitBatchAndWait } = await import('./judge0.service.js');
+      const { submitAndWait, submitBatchAndWait } = await import('./runner.service.js');
       const { SubmissionStatus } = await import('@vyro/types');
       const { query } = await import('../db/client.js');
       const { publishToRoom } = await import('./pubsub.service.js');

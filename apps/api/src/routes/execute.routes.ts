@@ -6,7 +6,7 @@ import {
   submitBatchAndWait,
   type TestCaseInput,
   type TestCaseResult,
-} from '../services/judge0.service.js';
+} from '../services/runner.service.js';
 import type { ExecuteRequest, SubmitRequest, Language } from '@vyro/types';
 
 export async function executeRoutes(fastify: FastifyInstance): Promise<void> {

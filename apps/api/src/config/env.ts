@@ -22,6 +22,9 @@ interface Env {
   JUDGE0_API_URL: string;
   JUDGE0_API_KEY: string;
 
+  VYRO_BIN: string;
+  VYRO_TIMEOUT_MS: number;
+
   COLLAB_PORT: number;
 
   NVIDIA_API_KEY: string;
@@ -119,6 +122,10 @@ function buildEnv(): Env {
 
     JUDGE0_API_URL: optional('JUDGE0_API_URL', 'https://ce.judge0.com'),
     JUDGE0_API_KEY: optional('JUDGE0_API_KEY', ''),
+
+    // Path to the compiled `vyro` binary (see ../../VyroLang/impl). Defaults to PATH.
+    VYRO_BIN: optional('VYRO_BIN', 'vyro'),
+    VYRO_TIMEOUT_MS: optionalInt('VYRO_TIMEOUT_MS', 5000),
 
     COLLAB_PORT: optionalInt('COLLAB_PORT', 1234),
 

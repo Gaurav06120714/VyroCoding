@@ -4,7 +4,8 @@ import { env } from '../config/env.js';
 const JUDGE0_API_URL = env.JUDGE0_API_URL;
 const JUDGE0_API_KEY = env.JUDGE0_API_KEY;
 
-export const LANGUAGES: Record<Language, { id: Language; name: string; monacoId: string }> = {
+// VyroLang is excluded — it runs on the native VyroVM, not Judge0 (see vyro.service.ts).
+export const LANGUAGES: Record<Exclude<Language, Language.Vyro>, { id: Language; name: string; monacoId: string }> = {
   [Language.JavaScript]: { id: Language.JavaScript, name: 'JavaScript (Node.js 18)', monacoId: 'javascript' },
   [Language.Python]:     { id: Language.Python,     name: 'Python 3',                monacoId: 'python' },
   [Language.Cpp]:        { id: Language.Cpp,        name: 'C++ (GCC 9.2)',           monacoId: 'cpp' },
