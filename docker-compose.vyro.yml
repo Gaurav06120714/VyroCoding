@@ -1,0 +1,45 @@
+# =============================================================================
+# VyroCoding — VyroLang overlay
+#
+# Adds native VyroVM execution to the dev stack. A throwaway Rust builder
+# compiles the `vyro` binary (musl, matching the alpine API image + host arch)
+# from the sibling VyroLang repo and shares it into the API container.
+#
+# Usage (from repo root, with ../VyroLang checked out next to this repo):
+#   docker compose -f docker-compose.dev.yml -f docker-compose.vyro.yml up --build
+#
+# Then open http://localhost:3002 and pick "VyroLang (native VyroVM)".
+# =============================================================================
+
+services:
+
+  # ── VyroVM builder (runs once, then exits) ───────────────────────────────────
+  vyro-build:
+    image: rust:1-alpine
+    working_dir: /build
+    volumes:
+      - ../VyroLang:/src:ro
+      - vyro-bin:/out
+    command: >
+      sh -c "apk add --no-cache musl-dev &&
+             cp -r /src/impl/* /build/ &&
+             cargo build --release &&
+             cp target/release/vyro /out/vyro &&
+             chmod +x /out/vyro &&
+             echo 'VyroVM binary ready at /out/vyro'"
+    networks:
+      - vyro-dev
+
+  # ── API: point execution at the native VyroVM ────────────────────────────────
+  api:
+    environment:
+      VYRO_BIN: /vyro/vyro
+      VYRO_TIMEOUT_MS: ${VYRO_TIMEOUT_MS:-5000}
+    volumes:
+      - vyro-bin:/vyro:ro
+    depends_on:
+      vyro-build:
+        condition: service_completed_successfully
+
+volumes:
+  vyro-bin:

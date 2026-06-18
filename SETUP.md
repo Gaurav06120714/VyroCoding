@@ -1,5 +1,9 @@
 # VyroCoding — Setup Guide
 
+> **Run VyroLang natively:** to launch the platform with the VyroVM wired in
+> (Judge0 bypassed for `.vy`), see [RUN_VYRO.md](./RUN_VYRO.md) — one command:
+> `pnpm vyro:up`.
+
 ## Quick Start
 
 ### Prerequisites
