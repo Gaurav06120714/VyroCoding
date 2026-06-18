@@ -2,7 +2,20 @@
 
 This launches the full VyroCoding platform with **VyroLang running on the native VyroVM** — Judge0 is bypassed for `.vy` programs. You write VyroLang in the browser, hit Run, and it compiles to bytecode and executes on the VM built in the [VyroLang](https://github.com/Gaurav06120714/VyroLang) repo.
 
-## Prerequisites
+## No Docker? Use the native path
+
+If Docker isn't installed but you have Homebrew, Node/pnpm, and Rust:
+
+```bash
+pnpm vyro:up:native
+```
+
+This builds the VyroVM, starts Homebrew Postgres + Redis, loads/seeds the
+database, and runs the apps with `pnpm dev` (VM wired in via `VYRO_BIN`).
+Web on http://localhost:3002, API on http://localhost:3003. Full details in the
+"Run natively" section below.
+
+## Prerequisites (Docker path)
 
 - Docker (Desktop or Engine) with Compose v2
 - The **VyroLang repo checked out next to this one**:

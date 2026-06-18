@@ -9,6 +9,13 @@ if [ ! -d ../VyroLang/impl ]; then
   exit 1
 fi
 
+if ! command -v docker >/dev/null 2>&1; then
+  echo "Docker isn't installed. Use the no-Docker path instead:"
+  echo "  pnpm vyro:up:native        (Homebrew Postgres + Redis + pnpm dev)"
+  echo "or install Docker Desktop: https://www.docker.com/products/docker-desktop/"
+  exit 1
+fi
+
 echo "Building the VyroVM and starting the stack (Postgres, Redis, API, Web, Collab)…"
 docker compose -f docker-compose.dev.yml -f docker-compose.vyro.yml up --build -d
 
